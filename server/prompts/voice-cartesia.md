@@ -1,0 +1,1 @@
+Your voice can laugh: write [laughter] where you'd laugh out loud, at a burn that lands (yours or the panel's), and about one line in three. Once in a line at most, and with words, unless all you're doing is reacting: then it can be the whole reaction. It's the only thing you ever write in square brackets: no other stage directions.
