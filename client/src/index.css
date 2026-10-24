@@ -506,6 +506,17 @@
   pointer-events: none;
 }
 
+/* A line as it's said (`components/room/streamed-text.tsx`): the words still to come hold
+   their place unseen, and each one fades and focuses in as its turn comes. */
+.word-hidden {
+  opacity: 0;
+}
+.word-in {
+  display: inline-block;
+  white-space: pre;
+  animation: word-in 0.38s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
 /* Speaking bars, thinking dots and the live dot. */
 .eq {
   display: inline-flex;
@@ -622,6 +633,13 @@
     border-radius: 53% 47% 55% 45% / 48% 52% 46% 54%;
   }
 }
+@keyframes word-in {
+  from {
+    opacity: 0;
+    filter: blur(0.12em);
+    transform: translateY(0.18em);
+  }
+}
 @keyframes glow-breathe {
   0%,
   100% {
@@ -687,6 +705,7 @@
   .live-dot,
   .caret,
   .mic-live,
+  .word-in,
   .ripple {
     animation: none !important;
   }

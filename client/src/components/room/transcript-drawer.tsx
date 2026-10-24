@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react"
 
 import { DebugPanel } from "@/components/room/debug-panel"
 import { Orb } from "@/components/room/orb"
+import { StreamedText } from "@/components/room/streamed-text"
 import { cn } from "@/lib/utils"
 import { BY_ID, colorOf, labelOf } from "@/room/cast"
 import { heardSoFar, type Line, useRoom } from "@/room/store"
@@ -106,7 +107,7 @@ function Transcript() {
                     user ? "text-foreground" : "text-[#c9c9d1]"
                   )}
                 >
-                  {line.text}
+                  <StreamedText key={line.id} line={line} />
                   {line.interrupted && (
                     <span className="text-subtle"> · cut off</span>
                   )}

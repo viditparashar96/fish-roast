@@ -8,6 +8,7 @@ import {
 } from "react"
 
 import { Orb } from "@/components/room/orb"
+import { StreamedText } from "@/components/room/streamed-text"
 import { VoiceOrb } from "@/components/room/voice-orb"
 import { useNow, useSize } from "@/hooks/use-now"
 import { CAST, HOST, BY_ID, labelOf } from "@/room/cast"
@@ -392,7 +393,7 @@ function Caption({ focus, clap }: { focus: string | null; clap: boolean }) {
           aria-live="polite"
           className="max-w-[860px] text-[22px] leading-tight font-semibold tracking-[-0.025em] text-balance text-[#f4f4f6] sm:text-[30px]"
         >
-          {current.text}
+          <StreamedText key={current.id} line={current} />
           {current.interrupted && (
             <span className="text-subtle"> (cut off)</span>
           )}
