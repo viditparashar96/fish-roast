@@ -21,11 +21,11 @@ still needs keys to check, and what to tune first. The brief is [PRD.md](PRD.md)
 | `config.py` | Settings (only OpenAI required), models, the show's and the scout's tunables, heat rules, lineups |
 | `bot.py` | The target from the start body; speech to text only with a Deepgram key (the mic isn't listened to otherwise); the producer once the client is ready |
 | `cast.py`, `prompts/` | Host and roaster prompts at the night's heat; six personas; what each kind of voice acts on (`voice-*.md`: Cartesia's `[laughter]`, Fish's directions and tags) |
-| `characters.json` | Nigel, Chad, Zoe, Dev, Margot, Nana Bea |
+| `characters.json` | Nigel, Chad, Zoe, Dev, Margot: five, so every voice fits Fish Audio's 5 at once |
 | `scripts/prep.py` | Read + writers' room, print every burn, cache (pre-warm demo links) |
 | `scripts/converse.py` | The whole show in text; chat and scripted heckles; soak over several targets |
 | `scripts/targets.txt`, `heckles.txt`, `fixtures/` | Soak targets, a heckle script, a fictional portfolio and LinkedIn profile |
-| `mixer.py` | Six voices on SmallWebRTC's one audio track: a queue per voice, mixed every 10 ms, each voice still paced by its own playback |
+| `mixer.py` | Every voice on SmallWebRTC's one audio track: a queue per voice, mixed every 10 ms, each voice still paced by its own playback |
 | `rehearsal.py` | `REHEARSAL=1`: canned lines instead of the LLM, everything else real |
 | `floor.py` | A line may come in over the end of the one it follows (once that one's end is known: when it started, plus its audio), or cut it off at a break once enough of it is heard (that voice alone stops); a chorus written ahead keeps its stagger from its turn |
 
@@ -73,12 +73,14 @@ the start body (`room/setup.ts`, `config.ts`), the messages (`room/types.ts`, `r
 - **Cartesia** (`sonic-3.6`): `[laughter]` comes back as a tag, not a word, and adds a laugh
   (~1 s); `<emotion value="sarcastic"/>` is taken as a tag. Anything else in brackets would be
   read out, so each voice's text is filtered to what it acts on (`services.for_cartesia`).
-- **Fish Audio**: Pipecat 1.12's `FishAudioTTSService` takes `drama-3` on the live WebSocket. The
-  key works, but the account's **API credit is $0**: the WebSocket answers 402 for every model
-  (even the free one) until there's credit. The free model over REST voiced all six of Fish's
-  official voices with bracketed directions, first audio in 0.4–0.7 s, six requests at once
-  fine. Not yet checked: Drama 3's live latency and gaps, and whether six open sessions fit the
-  first tier's 5 at once (`probe.py sessions` in the scratchpad does both).
+- **Fish Audio Drama 3, live** (2026-10-24, the new client, a real show on the sample, all five
+  voices on Fish): 248 s from the sample to the card, no errors. First audio from Fish: median
+  0.36 s (p90 0.43 s, 0.32–0.53 s, 38 lines); the line model's first token median 0.77 s (p90
+  1.00 s); Jev's reads median 0.31 s. So a fresh line is heard ~1.1 s after it's asked for, and
+  usually sooner, since the next line is written while this one plays. 40 of 54 lines carried a
+  cue (`[deadpan]`, `[smug]`, `[laughs]`, `[clears throat]`, `[pause]`…) and 15 a tag
+  (`<emphasis>`, `<whisper>`). With six voices on Fish, the sixth (Fish's first tier holds 5)
+  dropped its connection all show: hence the panel of five, and `FISH_MAX_VOICES`.
 - **Whole shows in Chrome, over WebRTC**, the real client and a fake microphone:
   - Rehearsal, pipecat.ai: 166 s, a typed clap-back routed to Chad (0.99), card 4/10, no errors.
   - Real lines, pipecat.ai: 276 s with lines of 60–90 words; with the word budgets, 200 s.
@@ -99,11 +101,8 @@ the start body (`room/setup.ts`, `config.ts`), the messages (`room/types.ts`, `r
 
 ## Not checked yet
 
-1. **Fish Audio's Drama 3, live**: needs API credit on the account. Then `TTS_PROVIDER=fish`.
-2. **Voice clap-backs** (+ Deepgram), ideally in a room as noisy as the venue.
-3. **Daily** (`-t daily`) and **Pipecat Cloud** (`pipecat cloud deploy`), if you want a public link.
-4. **A whole live show on the new client**: the live runs above were on the earlier client. Run
-   one with keys before the demo: the orbs following each voice, the transcript, the card download.
+1. **Voice clap-backs** (+ Deepgram), ideally in a room as noisy as the venue.
+2. **Daily** (`-t daily`) and **Pipecat Cloud** (`pipecat cloud deploy`), if you want a public link.
 
 ## What to tune first
 
@@ -154,6 +153,7 @@ the start body (`room/setup.ts`, `config.ts`), the messages (`room/types.ts`, `r
 - Laughs depend on the line model writing `[laughter]` (it mostly does, when asked to react);
   OpenAI's voices say "Ha!" instead.
 - Cut-ins need word timings: on Fish's or OpenAI's voices replies jump in over the end instead.
-- Fish Audio's first tier allows 5 requests at once, and the panel holds six voices.
+- Fish Audio's first tier holds 5 voices open at once: the panel is five to fit. A bigger cast
+  puts the rest (the host first) on Cartesia or OpenAI (`FISH_MAX_VOICES`).
 - P1 items from the PRD aren't built yet: picking the panel, extra pages for startups, GitHub API
   enrichment, PDF upload. (The card as an image is built.)

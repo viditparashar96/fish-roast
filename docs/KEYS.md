@@ -32,9 +32,11 @@ variable set in the shell wins. Nothing in `client/.env` is secret: it ends up i
   **add API credit** there: without it Fish refuses the live connection (HTTP 402, even for the
   free model), and the bot warns at start. Drama 3 is $50 per million characters ($10 until
   2026-11-12), so a show is a few cents; `FISH_MODEL=s2.1-pro` is $15, and takes the bracketed
-  directions but not the tags. The voices are Fish's own: Richard, Beau, Sheila, Ethan, Sophia
-  and Selene (ids in `characters.json`); swap any for another voice's id from
-  [fish.audio](https://fish.audio). The account's first tier allows 5 requests at once.
+  directions but not the tags. The voices are Fish's own: Richard, Beau, Sheila, Ethan and
+  Sophia (ids in `characters.json`); swap any for another voice's id from
+  [fish.audio](https://fish.audio). The account's first tier holds 5 voices open at once, which
+  is why the panel is five; a bigger cast puts the rest (the host first) on Cartesia or OpenAI,
+  and `FISH_MAX_VOICES` raises the limit on a plan that allows more.
 - **Jev**: a TypeSafe API key (`apikey_…`), from the TypeSafe console; as `JEV_API_KEY` or
   `TYPESAFE_API_KEY`. Pipecat's reference:
   [docs.pipecat.ai/api-reference/server/classifiers/jev](https://docs.pipecat.ai/api-reference/server/classifiers/jev).
@@ -48,7 +50,7 @@ variable set in the shell wins. Nothing in `client/.env` is secret: it ends up i
 | OpenAI | The whole show over WebRTC: OpenAI voices, OpenAI routing, plain fetch, typed clap-backs |
 | + Firecrawl | Any site, rendered, with the screenshot on the evidence board and in the writers' room |
 | + Cartesia | Faster, more expressive voices that laugh (and timing that matches the engine's estimates) |
-| + Fish Audio, `TTS_PROVIDER=fish` | Voices that act: directed delivery, sighs, gasps, whispers (Drama 3) |
+| + Fish Audio, `TTS_PROVIDER=fish` | Voices that act: directed delivery, breaths, coughs, laughs, sighs, gasps, whispers (Drama 3) |
 | + Jev | Snappier banter: who answers whom is decided in a quarter of a second |
 | + Deepgram | Clap back out loud |
 | OpenAI only | Also `scripts/prep.py` and `scripts/converse.py`: the writers' room and the whole show, in text |

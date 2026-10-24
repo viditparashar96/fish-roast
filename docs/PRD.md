@@ -24,7 +24,7 @@ a writers' room.
 
 | Hackathon criterion | Our answer |
 |---|---|
-| Wow / demo moment | A judge gives us *their* URL; 20 s later six voices are roasting it live, laughing over each other |
+| Wow / demo moment | A judge gives us *their* URL; 20 s later five voices are roasting it live, laughing over each other |
 | Technical depth | Multi-agent turn-taking: one pipeline, per-character LLM + TTS + audio track, a classifier routing every line |
 | Usefulness | Every roast ends with a score and one genuinely useful tip per roaster ("roast with love") |
 | Polish | Live "reading the evidence" screen with real buzzword stats, a shareable Roast Card at the end |
@@ -61,7 +61,7 @@ video avatars, multiple languages, mobile apps, scraping anything behind a login
   `Startup / product`, `Portfolio`, `LinkedIn`, `GitHub`, `Anything`.
 - **"Paste text instead"** toggle (a textarea). Suggested automatically for LinkedIn and X.
 - **Heat**: 🌶 *Mild* (friends teasing) · 🌶🌶 *Medium* (default) · 🌶🌶🌶 *Extra crispy*.
-- **Length**: *Quick* (three roasters in the spotlight, ~2–3 min) · *Full* (all five, ~4–5 min).
+- **Length**: *Quick* (three roasters in the spotlight, ~2–3 min) · *Full* (all four, ~4 min).
 - Consent line: "Roast yourself, your own work, or a friend who asked for it."
 - **ROAST IT** starts the session.
 
@@ -80,7 +80,7 @@ open and the intro; the spotlights wait for it only if it's still going.
 
 | # | Segment | Who | What happens |
 |---|---|---|---|
-| 1 | Cold open | all five roasters, at once | First reactions to the page, one to six words each, staggered ("Oh no." "Is this a ransom note?") |
+| 1 | Cold open | all four roasters, at once | First reactions to the page, one to six words each, staggered ("Oh no." "Is this a ransom note?") |
 | 2 | Intro | host | Welcomes the audience, introduces the target in two or three sentences, hands to the first roaster |
 | 3 | Spotlight × 3 or 5 | one roaster each | Their best two-to-four-sentence roast on their angle. Then **banter**: Jev decides whether another roaster answers, who reacts out loud, and when it has landed |
 | 4 | Lightning round | host, then all at once | Host fires a quick prompt ("Describe Acme in three words!"); every roaster answers at once |
@@ -106,7 +106,6 @@ roaster's tip · top buzzwords · **Copy** (text for socials) · **Roast again**
 | `zoe` | Zoe | Gen-Z growth intern | The vibe: aesthetics, trends, cringe, how it looks to anyone under 25 | Bronte / `coral` |
 | `dev` | Dev | Staff engineer | The tech: "AI-powered" claims, the stack, performance, the GitHub | Henry / `ash` |
 | `margot` | Margot | Creative director | The craft: fonts, colours, stock photos, copywriting, buzzwords | Skylar / `shimmer` |
-| `nana` | Nana Bea | Everyone's grandma | Sweetly baffled: what is it even, backhanded compliments | Marge / `sage` |
 
 The spotlight order depends on what's being roasted (a startup opens with Chad, a portfolio with
 Margot, GitHub with Dev); a quick show takes the first three. The cast lives in
@@ -138,7 +137,7 @@ Margot, GitHub with Dev); a quick show takes the first three. The cast lives in
 **P1: if time allows**
 - The screenshot goes to the writers' room as an image, so Margot can roast the actual design (on
   by default, with a text-only retry if the model rejects it).
-- Pick the panel (three to five roasters) on the setup screen.
+- Pick the panel (three or four roasters) on the setup screen.
 - Scrape two extra pages (pricing, about) for startups.
 - GitHub API enrichment (repos, languages, forks vs originals).
 - PDF upload for LinkedIn's "Save to PDF".
@@ -183,7 +182,7 @@ client ──/start {target, heat, length}──▶ runner ──▶ bot.run_bot
 | `cast.py`: a worker per character (jobs, takes, silence) | `director.py`: segments, the show driver | `stats.py`: buzzword bingo |
 | `engine.py`: banter policy, pile-ons, laughs | `producer.py`: prep progress, an early start | `writers.py`: dossier, cache, fallback |
 | `room.py`: the transcript, each view, Jev's questions | `characters.json`, `prompts/`: the panel | `scripts/prep.py`: pre-warm demo links |
-| `mixer.py`: six voices on one WebRTC track | `bot.py`: start body, prep task, optional STT | client: setup, stage, clap back, card |
+| `mixer.py`: every voice on one WebRTC track | `bot.py`: start body, prep task, optional STT | client: setup, stage, clap back, card |
 | `services.py`, `config.py`: OpenAI, optional Jev / Cartesia / Fish / Deepgram | | |
 
 **Routing.** Jev reads every line when `JEV_API_KEY` is set. Without it, Pipecat's built-in
@@ -202,7 +201,7 @@ deadline), `card` (the Roast Card). `cast` gains `voice_input`, `heat`, `router`
 | Daily (`DAILY_API_KEY`) | A Daily room per session (`-t daily`, Pipecat Cloud) | No: locally, WebRTC peer to peer, voices mixed on one track |
 | Firecrawl (`FIRECRAWL_API_KEY`) | Reading JS-heavy sites well | Strongly recommended (falls back to a plain fetch) |
 | Cartesia (`CARTESIA_API_KEY`) | Fast, expressive voices that laugh (`[laughter]`) | Recommended (falls back to OpenAI TTS) |
-| Fish Audio (`FISH_API_KEY`, `TTS_PROVIDER=fish`) | Voices that act: Drama 3 performs bracketed directions and tags | Optional (needs Fish API credit) |
+| Fish Audio (`FISH_API_KEY`, `TTS_PROVIDER=fish`) | Voices that act: Drama 3 performs directions, breaths, coughs, laughs and tags; the panel is five so every voice fits Fish's 5 at once | Recommended (needs Fish API credit) |
 | Jev (`JEV_API_KEY`) | Fast, calibrated routing | Recommended (falls back to OpenAI) |
 | Deepgram (`DEEPGRAM_API_KEY`) | Clapping back **by voice** | Optional (typing always works) |
 

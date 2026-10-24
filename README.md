@@ -3,7 +3,7 @@
 Paste a link. A live panel of AI comedians reads it, roasts it out loud, riffs on each other, and
 lets you clap back.
 
-The panel is a host and five roasters, each with their own voice on their own audio track, their
+The panel is a host and four roasters, each with their own voice on their own audio track, their
 own LLM, and their own angle:
 
 | | Role | Roasts |
@@ -13,7 +13,6 @@ own LLM, and their own angle:
 | **Zoe** | Gen-Z growth intern | the vibe: the aesthetic, the trends, the cringe |
 | **Dev** | Staff engineer | the tech: the "AI-powered" claims, the stack, the GitHub |
 | **Margot** | Creative director | the craft: fonts, colours, stock photos, the copy, the buzzwords |
-| **Nana Bea** | Grandma | the big picture, sweetly: what is it even, dear? |
 
 Give it a startup's site, a portfolio, a GitHub profile, or pasted text (a LinkedIn profile, a bio).
 Firecrawl reads the page; a writers' room (one call to a strong model) turns it into a dossier and
@@ -21,7 +20,7 @@ a few prepared burns for each roaster; and the show runs:
 
 | | Segment | What happens |
 |---|---|---|
-| 1 | Cold open | all five react at once to their first look ("Oh no." "Is this a ransom note?") |
+| 1 | Cold open | all four react at once to their first look ("Oh no." "Is this a ransom note?") |
 | 2 | Intro | Nigel introduces tonight's target and hands over |
 | 3 | Spotlights | three roasters (five in a full show) each deliver a roast; the others answer it, pile on, or react out loud, until it lands |
 | 4 | Lightning round | Nigel fires one quick question; everyone answers at once |
@@ -29,7 +28,7 @@ a few prepared burns for each roaster; and the show runs:
 | 6 | Verdicts | a score out of ten and one genuinely useful tip each |
 | 7 | Closing | the final score, and the **Roast Card**: the score, the burn of the night, the verdicts, buzzword bingo |
 
-Underneath is an engine that runs six voices in one room: Jev (TypeSafe's classifier) reads
+Underneath is an engine that runs five voices in one room: Jev (TypeSafe's classifier) reads
 every line to decide who answers whom, and the floor plays overlapping voices with human timing. The product brief is [`docs/PRD.md`](docs/PRD.md); what's built and verified so far is in
 [`docs/STATUS.md`](docs/STATUS.md).
 
@@ -70,7 +69,7 @@ account. Everything else makes the show better and has a stand-in. Where to get 
 | `OPENAI_API_KEY` | every line, the writers' room | (required; not in rehearsal) |
 | `FIRECRAWL_API_KEY` | reading pages properly: JavaScript, screenshots | a plain fetch (no JavaScript) |
 | `CARTESIA_API_KEY` | fast, expressive voices, that laugh | OpenAI's TTS (`gpt-4o-mini-tts`) |
-| `FISH_API_KEY` | with `TTS_PROVIDER=fish`: Fish Audio's Drama 3, voices that act (needs API credit) | Cartesia |
+| `FISH_API_KEY` | with `TTS_PROVIDER=fish`: Fish Audio's Drama 3, voices that act: breaths, coughs, laughs, whispers (needs API credit) | Cartesia |
 | `JEV_API_KEY` | fast, calibrated routing (~250 ms) | an OpenAI model asked the same questions (~1–2 s) |
 | `DEEPGRAM_API_KEY` | clapping back out loud | typing only |
 | `DAILY_API_KEY` | `bot.py -t daily`: a Daily room per session, as on Pipecat Cloud | WebRTC, peer to peer |
@@ -88,7 +87,7 @@ cd client && npm install && npm run dev            # http://localhost:5173
 ```
 
 Paste a link, pick the heat (🌶 mild, 🌶🌶 medium, 🌶🌶🌶 extra crispy) and the length (quick:
-three roasters, ~3 min; full: all five, ~5 min), and **roast it**. The runner's `/start` starts a
+three roasters, ~3 min; full: all four, ~4 min), and **roast it**. The runner's `/start` starts a
 bot per session, with what to roast in the request's `body`, and the browser connects to it
 peer to peer. LinkedIn, X and the like only show themselves to people who are logged in: the
 form asks for the text instead (LinkedIn: More → Save to PDF, then paste it).
@@ -132,7 +131,7 @@ uv run python scripts/converse.py --soak scripts/targets.txt   # several shows: 
 ### Deploy (Pipecat Cloud)
 
 The dev runner's `/start` is open to anyone who can reach it, and each call starts a session (a
-Daily room, six LLM and TTS streams, a writers' room call and a Firecrawl scrape): fine on
+Daily room, five LLM and TTS streams, a writers' room call and a Firecrawl scrape): fine on
 localhost, not on the internet. Deployed, Pipecat Cloud runs the sessions and authenticates their
 start. From the repo root (`Dockerfile` and `pcc-deploy.toml` are there):
 
@@ -207,14 +206,17 @@ director      show (segments) + engine (banter) + referee (Jev, or OpenAI standi
   introduce themselves, and they do, one line each, instead of the show going quiet for it.
 - **Voices that perform** (`server/prompts/voice-*.md`). Each character is told what their voice
   acts on: Cartesia laughs where a line says `[laughter]`; Fish Audio's Drama 3 takes a
-  direction or a sound in brackets (`[deadpan]`, `[sighs]`) and words wrapped in tags
-  (`<whisper>…</whisper>`). The voice gets the cues; the transcript, the screen and the rest of
+  direction or a sound in brackets (`[deadpan]`, `[deep breath]`, `[coughs]`, `[clears throat]`,
+  `[laughs]`) and words wrapped in tags (`<whisper>…</whisper>`). On Fish every line is asked
+  for a performance: a cue or two, a breath or a small body sound in about one line in three,
+  and the delivery turning when the line does; and Fish samples each take freely
+  (`FISH_TEMPERATURE`, `FISH_TOP_P`), so no two sound the same. The voice gets the cues; the transcript, the screen and the rest of
   the panel get the words (`as_said` in `server/room.py`). OpenAI's voices would read cues out,
   so with them there are none. On Fish, two things are changed in Pipecat's service for a voice
   in a worker of its own (`FishVoice` in `server/services.py`): it no longer holds the next line
   until the room is heard to stop speaking (a character's worker never hears that), and a line
   isn't split for the voice inside a tag.
-- **Six voices, one WebRTC track** (`server/mixer.py`). On Daily each voice is a track of its
+- **Every voice, one WebRTC track** (`server/mixer.py`). On Daily each voice is a track of its
   own. Pipecat's peer-to-peer transport (SmallWebRTC) has one, and writes every frame to it in
   the order they come: two voices at once would take turns 10 ms at a time. The mixing track keeps
   a queue per voice and plays a chunk of each every 10 ms, summed (each turned down by the square
@@ -288,11 +290,14 @@ profiles come in only as text the user pastes: nothing here logs in anywhere or 
 - **Flux reports its running transcript only as an event**, and event handlers run as tasks, so
   an update could land after the turn's final transcript and hold the turn open. `FluxSTTService`
   passes each update on as an interim transcription, in order, as it arrives (`tests/test_turns.py`).
-- **Latency** (measured with a headless participant on Daily): replies start ~0.3 s
-  after the line they answer; from the end of your words to the first voice, a median 1.3–1.8 s,
-  most of it the LLM's first token. Flux ends a finished line's turn ~0.35 s after your voice
-  stops. These were measured with an earlier, faster line model; re-measure with the OpenAI
-  models.
+- **Latency, on Fish Audio Drama 3** (a real show in Chrome over WebRTC, 2026-10-24): Fish's
+  first audio a median 0.36 s (p90 0.43 s); the line model's first token 0.77 s (p90 1.00 s);
+  Jev's reads 0.31 s. A fresh line is heard ~1.1 s after it's asked for, and usually sooner,
+  since the next line is written and voiced while this one plays. Flux ends a finished line's
+  turn ~0.35 s after your voice stops.
+- **Why five.** Fish Audio's first tier holds 5 voices open at once; with six, the sixth dropped
+  its connection all show. A bigger cast in `characters.json` puts the rest (the host first) on
+  Cartesia or OpenAI; `FISH_MAX_VOICES` raises the limit on a plan that allows more.
 
 ## Checks
 
