@@ -62,7 +62,7 @@ export function VoiceOrb({
       for (const band of bands) sum += readBand(spectrum, band)
       const target = Math.min(
         1,
-        Math.max(0, (sum / bands.length / 255 - 0.08) * 2.2)
+        Math.max(0, (sum / bands.length / 255 - 0.1) * 1.5)
       )
       // Quick to swell, slower to settle, as a voice reads to the eye.
       level += (target - level) * (target > level ? 0.35 : 0.12)

@@ -26,7 +26,8 @@ function RunOfShow() {
     )
   }
   const steps = stepsOf(show)
-  const clap = show.segment === "wait"
+  // Waiting for you only while the countdown runs: once you've answered, it carries on.
+  const clap = show.segment === "wait" && show.until !== null
   const now = steps.find((s) => s.state === "now")
   return (
     <div className="flex flex-col items-center gap-[5px]">
