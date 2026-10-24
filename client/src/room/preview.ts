@@ -14,7 +14,7 @@ const RUN = [
   "intro",
   "spotlight:chad",
   "spotlight:dev",
-  "spotlight:nana",
+  "spotlight:zoe",
   "lightning_ask",
   "lightning",
   "clap_back",
@@ -146,7 +146,6 @@ const STAGE: ServerMessage[] = [
   line(2, "zoe", "Is this a ransom note?", "together"),
   line(3, "dev", "Blockchain stand-ups. Sure.", "together"),
   line(4, "margot", "Four fonts. FOUR.", "together"),
-  line(5, "nana", "Oh, how lovely, dear.", "together"),
   line(
     6,
     "nigel",
@@ -174,7 +173,7 @@ const STAGE: ServerMessage[] = [
     speaker: "dev",
     step: 3,
     run: RUN,
-    lineup: ["chad", "dev", "nana"],
+    lineup: ["chad", "dev", "zoe"],
     name: "Synergiq",
     until: null,
     paused: false,
@@ -183,7 +182,7 @@ const STAGE: ServerMessage[] = [
   {
     type: "turn",
     take: 11,
-    speaker: "nana",
+    speaker: "zoe",
     reason: "pile_on",
     note: "Dev just landed a burn. Pile on.",
     messages: [],
@@ -198,7 +197,7 @@ const READS: JevReading[] = [
     react: { zoe: 0.78, nobody: 0.22 },
   }),
   reply(9, "margot", "pile_on", "dev", 2 / 3),
-  reply(10, "dev", "pile_on", "nana", 1),
+  reply(10, "dev", "pile_on", "zoe", 1),
 ]
 
 const CARD: ServerMessage = {
@@ -208,7 +207,7 @@ const CARD: ServerMessage = {
   kind: "startup",
   heat: "medium",
   score: 3.7,
-  scores: { chad: 3, dev: 2, nana: 6 },
+  scores: { chad: 3, dev: 2, zoe: 6 },
   verdicts: [
     {
       speaker: "chad",
@@ -221,8 +220,8 @@ const CARD: ServerMessage = {
       score: 2,
     },
     {
-      speaker: "nana",
-      text: "Six out of ten, dear, because the pricing is right there where I can see it. Now tell me what it does.",
+      speaker: "zoe",
+      text: "Six out of ten, because the pricing is honest and that's rare. Now tell me what it actually does.",
       score: 6,
     },
   ],
@@ -247,7 +246,7 @@ const CLAP_BACK: ServerMessage = {
   speaker: null,
   step: RUN.indexOf("clap_back"),
   run: RUN,
-  lineup: ["chad", "dev", "nana"],
+  lineup: ["chad", "dev", "zoe"],
   name: "Synergiq",
   until: Date.now() / 1000 + 20,
   paused: false,

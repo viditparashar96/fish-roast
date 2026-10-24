@@ -19,8 +19,6 @@ export const BOTS: Record<string, Bot> = {
   dev: { type: "square", glasses: "square", hat: "beanie" },
   // Strong feelings about kerning.
   margot: { type: "flower", hat: "beret" },
-  // Eighty-four and sharp as a tack.
-  nana: { type: "cloud", glasses: "round" },
   // You, in the middle when it's your turn.
   user: { type: "pebble" },
 }

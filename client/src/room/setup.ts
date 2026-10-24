@@ -78,7 +78,7 @@ export const LENGTHS: {
     detail: "3 roasters",
     blurb: "About 3 minutes.",
   },
-  { id: "full", label: "Full", detail: "all 5", blurb: "About 5 minutes." },
+  { id: "full", label: "Full", detail: "all 4", blurb: "About 4 minutes." },
 ]
 
 /** Sites that only show themselves to people who are logged in, as the bot knows them

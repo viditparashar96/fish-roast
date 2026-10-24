@@ -5,7 +5,7 @@ import { useRef, useState } from "react"
 import { Logo } from "@/components/room/logo"
 import { Orb } from "@/components/room/orb"
 import { cn } from "@/lib/utils"
-import { BY_ID, labelOf } from "@/room/cast"
+import { BY_ID, CAST, labelOf } from "@/room/cast"
 import { cardText, heatLabel, scoreText } from "@/room/card"
 import { hostOf, KINDS } from "@/room/setup"
 import type { CardMessage } from "@/room/types"
@@ -250,7 +250,8 @@ export function RoastCardScreen({
             <div className="flex justify-between text-xs text-subtle">
               <span>Roasted with love by Roast Room</span>
               <span>
-                6 voices · {roasters} {roasters === 1 ? "roaster" : "roasters"}
+                {CAST.length} voices · {roasters}{" "}
+                {roasters === 1 ? "roaster" : "roasters"}
               </span>
             </div>
           </div>

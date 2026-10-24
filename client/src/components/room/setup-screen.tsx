@@ -159,7 +159,7 @@ export function SetupScreen({
                 />
               ))}
             </span>
-            Six AI comedians, six live voices
+            Five AI comedians, five live voices
           </span>
           <h1 className="text-[44px] leading-[1.04] font-semibold tracking-[-0.035em] text-balance sm:text-[60px]">
             Get your startup roasted. Live.
