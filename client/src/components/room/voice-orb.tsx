@@ -1,8 +1,7 @@
-import { BotAvatar } from "bot-avatars"
 import { type CSSProperties, useEffect, useRef } from "react"
 
+import { GlassBot } from "@/components/room/glass-bot"
 import { cn } from "@/lib/utils"
-import { botOf } from "@/room/bots"
 import { useRoom } from "@/room/store"
 import { tonesOf } from "@/room/tones"
 import {
@@ -41,7 +40,6 @@ export function VoiceOrb({
   ripples?: boolean
 }) {
   const { color, accent } = tonesOf(id)
-  const bot = botOf(id)
   const paused = useRoom((s) => s.show?.paused ?? false)
   const root = useRef<HTMLSpanElement>(null)
   const hearing = state === "speaking" && track !== null
@@ -105,32 +103,15 @@ export function VoiceOrb({
         </>
       )}
       <span className="vo-glow" />
-      <span className="vo-glass">
-        <span className="vo-back" />
-        <span className="vo-bot">
-          <BotAvatar
-            {...bot}
-            aria-hidden="true"
-            size={Math.round(size * BOT)}
-            color={color}
-            face="mouth"
-            shading="fabric"
-            state={
-              paused ? "sleeping" : state === "speaking" ? "working" : "default"
-            }
-            seed={seedOf(id)}
-            jumpHeight={10}
-          />
-        </span>
-        <span className="vo-shine" />
-      </span>
+      <GlassBot
+        id={id}
+        size={size}
+        fill={BOT}
+        state={
+          paused ? "sleeping" : state === "speaking" ? "working" : "default"
+        }
+        jumpHeight={10}
+      />
     </span>
   )
-}
-
-/** A steady 0–1 offset per speaker, so the panel doesn't blink in unison. */
-function seedOf(id: string): number {
-  let h = 0
-  for (const ch of id) h = (h * 31 + ch.charCodeAt(0)) % 997
-  return h / 997
 }

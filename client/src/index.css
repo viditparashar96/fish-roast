@@ -127,61 +127,38 @@
   }
 }
 
-/* A small orb, drawn in CSS: avatars, chips and the setup screen's panel. The stage's orbs are
-   Pipecat UI's audio-reactive shader (`components/room/voice-orb.tsx`). Set --c and --a. */
+/* A small orb (`components/room/orb.tsx`): the stage's liquid glass with a speaker's bot inside,
+   for avatars, chips and the setup screen's panel. Set --c and --a. Its glow (--orb-glow) is
+   light, not paint: it brightens what's behind it in their colour. */
 .orb {
+  --level: 0;
   position: relative;
+  display: inline-block;
   flex-shrink: 0;
   border-radius: 9999px;
 }
 .orb::before {
   content: "";
   position: absolute;
-  inset: -38%;
+  inset: -45%;
   border-radius: 9999px;
   background: radial-gradient(
-    circle,
-    color-mix(in oklab, var(--c) 42%, transparent) 0%,
-    transparent 62%
+    closest-side,
+    color-mix(in oklab, var(--c) 40%, transparent) 30%,
+    transparent 100%
   );
-  filter: blur(10px);
-  opacity: var(--orb-glow, 0);
+  filter: blur(0.12em);
+  mix-blend-mode: screen;
+  opacity: calc(var(--orb-glow, 0) * 0.55);
   pointer-events: none;
 }
-.orb-core {
-  position: absolute;
-  inset: 0;
-  border-radius: 9999px;
-  background: radial-gradient(
-    circle at 34% 28%,
-    #ffffff 0%,
-    var(--a) 15%,
-    var(--c) 45%,
-    color-mix(in oklab, var(--c) 38%, #05060a) 82%,
-    #05060a 100%
-  );
-  box-shadow:
-    inset 0 -0.15em 0.4em rgba(0, 0, 0, 0.5),
-    inset 0 0.1em 0.3em rgba(255, 255, 255, 0.18);
+.orb-breathe .vo-glass {
+  animation:
+    liquid 9s ease-in-out infinite,
+    orb-breathe 3.2s ease-in-out infinite;
 }
-.orb-swirl {
-  position: absolute;
-  inset: 10%;
-  border-radius: 9999px;
-  background: conic-gradient(
-    from 0deg,
-    transparent 0 15%,
-    color-mix(in oklab, var(--a) 70%, transparent) 25%,
-    transparent 40% 60%,
-    rgba(255, 255, 255, 0.4) 72%,
-    transparent 85%
-  );
-  filter: blur(4px);
-  mix-blend-mode: screen;
-  animation: orb-spin 9s linear infinite;
-}
-.orb-breathe .orb-core {
-  animation: orb-breathe 3.2s ease-in-out infinite;
+.orb-still .vo-glass {
+  animation: none;
 }
 
 /* A speaker's orb on stage (`components/room/voice-orb.tsx`): a drop of clear liquid glass with
@@ -194,21 +171,24 @@
   flex-shrink: 0;
   border-radius: 9999px;
 }
-/* Their colour, round the glass: a halo that starts at the rim (62.5% of the way out here), so
-   the drop itself stays clear. */
+/* Their colour, round the glass: light, not paint. It starts at the rim (62.5% of the way out
+   here), so the drop stays clear, and it adds to whatever is behind it rather than covering it,
+   so it reads as the stage lit in their colour. It brightens with their voice. */
 .vo-glow {
   position: absolute;
   inset: -30%;
   border-radius: 9999px;
   background: radial-gradient(
     closest-side,
-    transparent 52%,
-    color-mix(in oklab, var(--c) 34%, transparent) 64%,
+    transparent 50%,
+    color-mix(in oklab, var(--c) 55%, transparent) 62%,
+    color-mix(in oklab, var(--c) 14%, transparent) 80%,
     transparent 100%
   );
-  filter: blur(0.05em);
-  opacity: calc(0.4 + var(--level) * 0.5);
-  transform: scale(calc(1 + var(--level) * 0.28));
+  filter: blur(0.06em);
+  mix-blend-mode: screen;
+  opacity: calc(0.22 + var(--level) * 0.5);
+  transform: scale(calc(1 + var(--level) * 0.22));
   pointer-events: none;
 }
 /* The drop: never quite round, it wobbles like liquid held by its own skin. */
@@ -253,7 +233,8 @@
   justify-content: center;
 }
 /* The glass itself, over the bot: a crisp lit rim, the thickened edge where the light bends, a
-   window reflection at the upper left with its hot spot, and a caustic caught at the bottom. */
+   window reflection at the upper left with its hot spot (on stage, it slides toward the cursor),
+   and a caustic caught at the bottom. */
 .vo-shine {
   position: absolute;
   inset: 0;
@@ -261,7 +242,7 @@
   pointer-events: none;
   background:
     radial-gradient(
-      ellipse 30% 17% at 33% 17%,
+      ellipse 30% 17% at calc(33% + var(--px) * 10%) calc(17% + var(--py) * 8%),
       rgb(255 255 255 / 0.5),
       rgb(255 255 255 / 0) 100%
     ),
@@ -285,8 +266,8 @@
 .vo-shine::after {
   content: "";
   position: absolute;
-  left: 22%;
-  top: 15%;
+  left: calc(22% + var(--px) * 10%);
+  top: calc(15% + var(--py) * 8%);
   width: 0.09em;
   height: 0.045em;
   border-radius: 50%;
@@ -295,7 +276,7 @@
   rotate: -32deg;
 }
 .voice-orb.listening .vo-glow {
-  opacity: 0.2;
+  opacity: 0.12;
 }
 .voice-orb.speaking .vo-glass {
   animation-name: liquid-talk;
@@ -410,17 +391,6 @@
 .dial[data-dragging] {
   --spin: 0ms;
   cursor: grabbing;
-}
-/* The light comes from the cursor. */
-.dial .orb-core {
-  background: radial-gradient(
-    circle at calc(34% + var(--px) * 14%) calc(28% + var(--py) * 12%),
-    #ffffff 0%,
-    var(--a) 15%,
-    var(--c) 45%,
-    color-mix(in oklab, var(--c) 38%, #05060a) 82%,
-    #05060a 100%
-  );
 }
 /* The circle itself, ticked, turning with the panel: drawn flat and squashed into the tilt. Its
    back half fades into the dark. */
@@ -601,11 +571,6 @@
   pointer-events: none;
 }
 
-@keyframes orb-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
 @keyframes orb-breathe {
   0%,
   100% {
@@ -714,8 +679,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .orb-swirl,
-  .orb-breathe .orb-core,
+  .orb .vo-glass,
   .voice-orb .vo-glass,
   .voice-orb .vo-glow,
   .eq > i,

@@ -389,10 +389,14 @@ export function SetupScreen({
             {CAST.map((c) => (
               <li
                 key={c.id}
-                className="flex flex-col gap-3 rounded-[14px] border border-line bg-surface p-4"
+                className="flex flex-col gap-3 rounded-[14px] border border-line p-4"
+                style={{
+                  // Their colour, washed faintly over the card from behind their bot.
+                  background: `radial-gradient(120% 90% at 0% 0%, color-mix(in oklab, ${c.color} 9%, transparent), transparent 60%), var(--surface)`,
+                }}
               >
                 <div className="flex items-start justify-between">
-                  <Orb id={c.id} size={44} breathe />
+                  <Orb id={c.id} size={64} breathe glow />
                   {c.host && (
                     <span className="rounded-full border border-[#2e2e36] px-2 py-0.5 text-[11px] text-[#b4b4be]">
                       Host
