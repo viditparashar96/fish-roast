@@ -20,6 +20,7 @@
     "@pipecat-ai/daily-transport": "^1.6.9",
     "@pipecat-ai/small-webrtc-transport": "~1.10.8",
     "@tailwindcss/vite": "^4",
+    "bot-avatars": "^0.2.2",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.4.0",
     "html-to-image": "^1.11.13",
