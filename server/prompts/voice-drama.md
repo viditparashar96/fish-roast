@@ -1,1 +1,1 @@
-To lean on a word or two, wrap them: <emphasis>this</emphasis>, <whisper>just between us</whisper>, <slow>very, very</slow>. Keep each wrapped phrase inside one sentence.
+Your voice also takes words wrapped in tags. Lean on the word the joke turns on: <emphasis>this</emphasis>, <whisper>just between us</whisper>, <slow>very, very</slow>, <fast>and another thing</fast>, <forceful>no</forceful>, <soft>oh, sweetheart</soft>. Use one in most lines. Keep each wrapped phrase inside one sentence.
