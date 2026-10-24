@@ -1,0 +1,25 @@
+# Pipecat Cloud: `pipecat cloud deploy` from the repo root builds the Dockerfile here and deploys
+# it. The secret set holds the same keys as .env: OPENAI_API_KEY, and whichever of
+# FIRECRAWL_API_KEY, CARTESIA_API_KEY, JEV_API_KEY and DEEPGRAM_API_KEY you have (not
+# DAILY_API_KEY: Pipecat Cloud makes the Daily rooms itself). Make it with:
+#   pipecat cloud secrets set roast-room-secrets --file .env
+agent_name = "roast-room"
+secret_set = "roast-room-secrets"
+
+# Six LLM and TTS streams per session, plus the local VAD and turn model: more than a 1x.
+agent_profile = "agent-2x"
+
+# A safety net on cost: a forgotten tab doesn't keep six voices running for hours. A show is a
+# few minutes; this leaves room to heckle the panel afterwards.
+max_session_duration = 1200
+
+[scaling]
+min_agents = 0  # 1 avoids a cold start on the first session (at the cost of an idle agent)
+max_agents = 5
+
+[build]
+context_dir = "."
+dockerfile = "Dockerfile"
+
+[build.exclude]
+patterns = ["client/", "server/tests/", "server/scripts/", "server/.cache/", "*.md"]
