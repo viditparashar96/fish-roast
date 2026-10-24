@@ -1,0 +1,6 @@
+# Targets for `converse.py --soak`: one per line, a link, `sample` (the startup that doesn't
+# exist), or a text file of pasted text, each optionally followed by its kind.
+sample
+fixtures/portfolio.txt portfolio
+fixtures/profile.txt profile
+# https://your-startup.example
