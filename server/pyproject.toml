@@ -1,0 +1,28 @@
+[project]
+name = "roast-room-server"
+version = "0.2.0"
+description = "Roast Room: paste a link, and a panel of AI comedians roasts it out loud, each in their own voice on their own Daily track, with Jev deciding who answers whom"
+requires-python = ">=3.12"
+dependencies = [
+    "httpx>=0.28,<1",
+    "pipecat-ai[cartesia,daily,deepgram,fish,jev,openai,runner,silero,webrtc]==1.12.0",
+    "python-dotenv>=1.1,<2",
+]
+
+[dependency-groups]
+dev = ["pyright>=1.1.404,<2", "pytest>=8", "pytest-asyncio>=0.24", "ruff>=0.12.11,<1"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "UP"]
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+pythonpath = ["."]
+testpaths = ["tests"]
