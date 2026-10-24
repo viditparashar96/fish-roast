@@ -190,12 +190,15 @@ async def run_bot(
                 await jev.connect()
             except Exception as error:  # noqa: BLE001 — the reads fall back; the session goes on
                 logger.warning(f"Session: Jev isn't reachable ({error}); routing will fall back")
+        voices = settings.voices_by_character(CAST)
         await runner.add_workers(
             *(
                 CharacterWorker(
                     c,
-                    services.llm(settings, prompt(c, CAST, target.heat, settings.cues), c),
-                    services.tts(settings, c),
+                    services.llm(
+                        settings, prompt(c, CAST, target.heat, settings.cues_for(voices[c.id])), c
+                    ),
+                    services.tts(settings, c, voices[c.id]),
                 )
                 for c in CAST
             ),
@@ -269,6 +272,12 @@ if __name__ == "__main__":
     if transport_flag(sys.argv) == "daily":
         require("DAILY_API_KEY")  # the dev runner makes a Daily room per session with it
     logger.info(f"Roast Room: {settings.summary()}")
+    voices = settings.voices_by_character(CAST)
+    if given := [f"{c.name} on {voices[c.id]}" for c in CAST if voices[c.id] != settings.voices]:
+        logger.info(
+            f"Fish Audio holds {settings.fish_max_voices} voices at once, so {', '.join(given)} "
+            "(FISH_MAX_VOICES=6 on a plan that allows six)"
+        )
     if settings.voices == "fish" and asyncio.run(services.fish_credit(settings)) == 0:
         logger.warning(
             "Fish Audio has no API credit, so every voice will fail: add some at "

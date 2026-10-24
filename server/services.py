@@ -42,6 +42,8 @@ from config import (
     DEEPGRAM_MODEL,
     FISH_PAIRED_TAGS,
     FISH_STOP_S,
+    FISH_TEMPERATURE,
+    FISH_TOP_P,
     JEV_TIMEOUT_S,
     LLM_TEMPERATURE,
     LLM_TOKENS,
@@ -236,23 +238,29 @@ async def for_openai(text: str, _: Any = None) -> str:
     return "Ha!" if said == LAUGH else "Hm."
 
 
-def tts(settings: Settings, character: Character) -> TTSService:
+def tts(settings: Settings, character: Character, voices: str | None = None) -> TTSService:
     """A character's own voice: Cartesia's, Fish Audio's, or OpenAI's played as the character
     asks. Its audio goes to the transport destination named after them: their own audio track
     in the room, so several of them can speak at once."""
-    if settings.voices == "cartesia":
+    voices = voices or settings.voices
+    if voices == "cartesia":
         return CartesiaTTSService(
             api_key=settings.cartesia_api_key,
             settings=CartesiaTTSService.Settings(voice=character.voice),
             text_transforms=[("*", for_cartesia)],
             transport_destination=character.id,
         )
-    if settings.voices == "fish":
+    if voices == "fish":
         if not character.fish_voice:
             raise ValueError(f'{character.id} has no "fishVoice" in characters.json')
         return FishVoice(
             api_key=settings.fish_api_key,
-            settings=FishVoice.Settings(voice=character.fish_voice, model=settings.fish_model),
+            settings=FishVoice.Settings(
+                voice=character.fish_voice,
+                model=settings.fish_model,
+                temperature=FISH_TEMPERATURE,
+                top_p=FISH_TOP_P,
+            ),
             transport_destination=character.id,
         )
     return OpenAITTSService(

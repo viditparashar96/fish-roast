@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import os
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -41,6 +42,14 @@ DEEPGRAM_MODEL = "flux-general-en"  # Flux: transcription with its own end-of-tu
 FISH_STOP_S = 1.5
 # Drama 3's paired tags: a line is never split for the voice inside one (prompts/voice-drama.md).
 FISH_PAIRED_TAGS = ("whisper", "emphasis", "soft", "fast", "slow", "stress", "forceful")
+# How freely Fish's voices perform (0–1; Fish's own default is 0.7): higher plays each line with
+# more colour and more difference from take to take, which a roast panel wants.
+FISH_TEMPERATURE = 0.9
+FISH_TOP_P = 0.85
+# Fish Audio's first tier holds 5 voices open at once, and the panel is six: past this many, the
+# rest (the host first) speak in the next voice there's a key for, Cartesia's or OpenAI's. Set
+# FISH_MAX_VOICES=6 in .env on a plan that allows it.
+FISH_MAX_VOICES = 5
 
 # --- Workers ----------------------------------------------------------------------------------
 
@@ -301,6 +310,7 @@ class Settings:
     cartesia_api_key: str = ""
     fish_api_key: str = ""
     fish_model: str = FISH_MODEL
+    fish_max_voices: int = FISH_MAX_VOICES
     deepgram_api_key: str = ""
     tts_provider: str = ""  # "cartesia", "fish" or "openai"; empty: by the keys there are
     rehearsal: bool = False  # canned lines instead of an LLM (`rehearsal.py`)
@@ -322,9 +332,23 @@ class Settings:
     def cues(self) -> str:
         """The performance cues the panel's voices act on, for their prompts (`cast.DELIVERY`):
         Fish Audio's directions (and Drama's tags), Cartesia's laugh, or none for OpenAI's."""
-        if self.voices == "fish":
+        return self.cues_for(self.voices)
+
+    def cues_for(self, voices: str) -> str:
+        """The cues one kind of voice acts on (see `cues`)."""
+        if voices == "fish":
             return "drama" if self.fish_model.startswith("drama") else "fish"
-        return "cartesia" if self.voices == "cartesia" else ""
+        return "cartesia" if voices == "cartesia" else ""
+
+    def voices_by_character(self, cast: Sequence[Character]) -> dict[str, str]:
+        """Whose voice each character speaks in: the panel's (`voices`), except past Fish
+        Audio's limit of voices open at once, where the rest take the next voice there's a key
+        for (Cartesia's, else OpenAI's). The roasters keep Fish first: the host gives way."""
+        if self.voices != "fish" or len(cast) <= self.fish_max_voices:
+            return {c.id: self.voices for c in cast}
+        others = "cartesia" if self.cartesia_api_key else "openai"
+        fish = {c.id for c in sorted(cast, key=lambda c: c.host)[: self.fish_max_voices]}
+        return {c.id: "fish" if c.id in fish else others for c in cast}
 
     @property
     def router(self) -> str:
@@ -357,6 +381,7 @@ class Settings:
             cartesia_api_key=optional("CARTESIA_API_KEY"),
             fish_api_key=optional("FISH_API_KEY"),
             fish_model=optional("FISH_MODEL", FISH_MODEL),
+            fish_max_voices=int(optional("FISH_MAX_VOICES", str(FISH_MAX_VOICES))),
             deepgram_api_key=optional("DEEPGRAM_API_KEY"),
             tts_provider=optional("TTS_PROVIDER").lower(),
             rehearsal=rehearsal,
