@@ -1,24 +1,31 @@
+import { BotAvatar } from "bot-avatars"
 import { type CSSProperties, useEffect, useRef } from "react"
 
 import { cn } from "@/lib/utils"
+import { botOf } from "@/room/bots"
+import { useRoom } from "@/room/store"
+import { tonesOf } from "@/room/tones"
 import {
   createVisualizerAnalyser,
   createVoiceBands,
   readBand,
 } from "@/lib/visualizer"
-import { tonesOf } from "@/room/tones"
 
 export type VoiceState = "speaking" | "thinking" | "listening"
 
 /** Bands averaged into one level: enough to follow a voice, few enough to be cheap. */
 const BANDS = 8
+/** The bot's size inside its orb, as a share of the orb: room to hop without hitting the glass. */
+const BOT = 0.46
 
 /**
- * A speaker's orb on stage, moving with their own voice: Pipecat UI's analyser reads their
- * track and sets `--level` (0–1) on the orb, which swells and glows with it, a frame at a time
- * and without re-rendering. It only listens while they're speaking (over WebRTC every voice
- * shares one mixed track); thinking, it breathes; listening, it rests, still in their colour.
- * `ripples` adds rings for whoever has the floor.
+ * A speaker's orb on stage: a drop of clear liquid glass with their bot inside, moving with their
+ * own voice. Pipecat UI's analyser reads their track and sets `--level` (0–1) on the orb, which
+ * swells and ripples with it, a frame at a time and without re-rendering. It only listens while
+ * they're speaking (over WebRTC every voice shares one mixed track). Speaking, the bot hops and
+ * laughs; thinking, the glass breathes; listening, it rests; with the show paused, the bot
+ * sleeps. The bot's eyes follow the cursor, and a click makes it hop. `ripples` adds rings for
+ * whoever has the floor.
  */
 export function VoiceOrb({
   id,
@@ -34,6 +41,8 @@ export function VoiceOrb({
   ripples?: boolean
 }) {
   const { color, accent } = tonesOf(id)
+  const bot = botOf(id)
+  const paused = useRoom((s) => s.show?.paused ?? false)
   const root = useRef<HTMLSpanElement>(null)
   const hearing = state === "speaking" && track !== null
 
@@ -96,10 +105,32 @@ export function VoiceOrb({
         </>
       )}
       <span className="vo-glow" />
-      <span className="vo-body">
-        <span className="orb-core" />
-        <span className="orb-swirl" />
+      <span className="vo-glass">
+        <span className="vo-back" />
+        <span className="vo-bot">
+          <BotAvatar
+            {...bot}
+            aria-hidden="true"
+            size={Math.round(size * BOT)}
+            color={color}
+            face="mouth"
+            shading="fabric"
+            state={
+              paused ? "sleeping" : state === "speaking" ? "working" : "default"
+            }
+            seed={seedOf(id)}
+            jumpHeight={10}
+          />
+        </span>
+        <span className="vo-shine" />
       </span>
     </span>
   )
+}
+
+/** A steady 0–1 offset per speaker, so the panel doesn't blink in unison. */
+function seedOf(id: string): number {
+  let h = 0
+  for (const ch of id) h = (h * 31 + ch.charCodeAt(0)) % 997
+  return h / 997
 }

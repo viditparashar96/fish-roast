@@ -1,5 +1,11 @@
 import { usePipecatClientMediaTrack } from "@pipecat-ai/client-react"
-import { type CSSProperties, useState } from "react"
+import {
+  type CSSProperties,
+  type PointerEvent,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react"
 
 import { Orb } from "@/components/room/orb"
 import { VoiceOrb } from "@/components/room/voice-orb"
@@ -16,8 +22,18 @@ import type { PrepMessage, ShowMessage } from "@/room/types"
 const ORB = 256
 /** How long a reaction ("Oof!") stays up beside whoever said it. */
 const REACTION_MS = 3200
-const MOVE =
-  "transition-[left,top,transform,opacity] duration-700 ease-[cubic-bezier(.2,.8,.2,1)]"
+/** How far apart the panel sit round the dial. */
+const STEP = 360 / CAST.length
+/** How far an orb leans toward the cursor over it, as a share of how far off-centre it is. */
+const MAGNET = 0.22
+/** How far the cursor must move with the button down before it's a drag: a click under that is
+ * a click, and makes the bot under it hop. */
+const DRAG_PX = 4
+/** The dial's ticks: a long one at each seat, and this many between one seat and the next. */
+const TICKS = 8
+/** The ticks' circle, in the track's 100-unit drawing, and how far round it is. */
+const TICK_R = 47.5
+const AROUND = 2 * Math.PI * TICK_R
 
 /** Who has the spotlight: whoever is speaking the latest line, else whoever is speaking, else
  * the roaster in the spotlight, else whoever spoke last, else the host. */
@@ -35,13 +51,40 @@ function focusOf(
   return said.at(-1)?.speaker ?? HOST.id
 }
 
-/** The panel around the spotlight, host in the middle of the arc. */
-function ringOf(focus: string | null) {
-  const others = CAST.filter((c) => c.id !== focus && !c.host)
-  if (focus === HOST.id) return others
-  const ring = [...others]
-  ring.splice(Math.floor(others.length / 2), 0, HOST)
-  return ring
+/** Where the dial sits in the field (px), and how big its front seat (whoever has the floor)
+ * and its back seat are, as a share of the orb's canvas. While the show waits for you nobody
+ * has the floor: the dial widens round your orb, every seat the same size. */
+function dialOf(W: number, F: number, clap: boolean) {
+  const small = Math.max(40, Math.min(60, F * 0.1))
+  if (clap) {
+    const rx = Math.max(160, Math.min(W / 2 - 70, Math.max(260, W * 0.36)))
+    // Tall enough that its near edge passes under your countdown, not through it.
+    const ry = Math.min(F * 0.38, rx * 0.65)
+    return { cx: W / 2, cy: F * 0.44, rx, ry, big: small, small }
+  }
+  const big = Math.max(120, Math.min(ORB, F * 0.4))
+  const front = F - big / 2 - 80 // room under the front seat for the name
+  const back = Math.max(small / 2 + 12, F * 0.12)
+  // From 1024 px (`@5xl`) the evidence and the crowd cards take the top corners: keep clear.
+  const rx = W >= 1024 ? Math.min(W * 0.28, 380) : Math.min(W / 2 - 44, 300)
+  return {
+    cx: W / 2,
+    cy: (front + back) / 2,
+    rx,
+    ry: (front - back) / 2,
+    big,
+    small,
+  }
+}
+
+/** The dial's turn that brings `focus` to the front, the way round nearest `from`; with nobody
+ * to bring forward, the nearest turn with the front between two seats. */
+function turnFor(focus: string | null, from: number): number {
+  const goal =
+    focus === null
+      ? STEP * Math.round((from - STEP / 2) / STEP) + STEP / 2
+      : -CAST.findIndex((c) => c.id === focus) * STEP
+  return from + ((((goal - from) % 360) + 540) % 360) - 180
 }
 
 /** The last words of a line, for the line before the one on screen. */
@@ -365,10 +408,12 @@ function Caption({ focus, clap }: { focus: string | null; clap: boolean }) {
 }
 
 /**
- * The live stage: whoever has the floor in the middle, in their colours, moving with their own
- * voice; the rest of the panel in an arc above, each still moving with theirs (a chorus, a laugh
- * over someone's line); reactions popping up beside whoever said them; and when the show waits
- * for you, your own orb in the middle with the time you have left.
+ * The live stage: the panel round a dial, each orb moving with their own voice (a chorus, a laugh
+ * over someone's line). Whoever has the floor sits at the front, biggest, in their colours; when
+ * the floor changes hands the dial turns, the short way round, and brings them forward. Reactions
+ * pop up beside whoever said them; when the show waits for you, the dial opens round your own orb
+ * with the time you have left. The cursor lights the orbs and they lean toward it; drag the dial
+ * to spin it, and it turns back to whoever has the floor when you let go.
  */
 export function Stage() {
   const [field, box] = useSize<HTMLDivElement>()
@@ -389,19 +434,103 @@ export function Stage() {
 
   const W = box.width
   const F = box.height
-  const centerSize = Math.round(Math.max(120, Math.min(ORB, F * 0.42)))
-  const center = { x: W / 2, y: F * 0.58 }
+  const dial = dialOf(W, F, clap)
+  const front = dial.cy + dial.ry
   // Your orb, while the show waits for you: smaller, with room for its countdown and words.
   const youSize = Math.round(Math.max(110, Math.min(ORB * 0.82, F * 0.3)))
-  const small = Math.round(Math.max(44, Math.min(64, F * 0.1)))
-  const ring = ringOf(focus)
-  const spread = Math.min(W * 0.36, 400)
-  const slots = new Map(
-    ring.map((c, i) => {
-      const t = ring.length === 1 ? 0 : -1 + (2 * i) / (ring.length - 1)
-      return [c.id, { x: W / 2 + t * spread, y: F * 0.14 + t * t * F * 0.15 }]
-    })
-  )
+
+  // The dial's turn (deg, never wrapped, so it always eases the short way round) is set on the
+  // field directly, as is the cursor: neither re-renders the stage.
+  const turn = useRef(0)
+  const held = useRef<{
+    pointer: number
+    x: number
+    from: number
+    dragging: boolean
+  } | null>(null)
+  const aim = useRef(focus)
+
+  const spin = (to: number) => {
+    turn.current = to
+    field.current?.style.setProperty("--turn", `${to}deg`)
+  }
+
+  useLayoutEffect(() => {
+    aim.current = focus
+    if (held.current?.dragging) return // it turns to them once you let go
+    turn.current = turnFor(focus, turn.current)
+    field.current?.style.setProperty("--turn", `${turn.current}deg`)
+  }, [focus, field])
+
+  // Placed once the stage has its size, so the dial doesn't ease in from the corner.
+  const sized = W > 0
+  useLayoutEffect(() => {
+    const el = field.current
+    if (!sized || !el) return
+    const frame = requestAnimationFrame(() => (el.dataset.placed = ""))
+    return () => cancelAnimationFrame(frame)
+  }, [sized, field])
+
+  const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0 || (e.target as Element).closest("aside, button, a"))
+      return
+    held.current = {
+      pointer: e.pointerId,
+      x: e.clientX,
+      from: turn.current,
+      dragging: false,
+    }
+  }
+
+  const onPointerMove = (e: PointerEvent<HTMLDivElement>) => {
+    const el = e.currentTarget
+    const r = el.getBoundingClientRect()
+    const across = (v: number) =>
+      Math.max(-1, Math.min(1, v * 2 - 1)).toFixed(3)
+    el.style.setProperty("--px", across((e.clientX - r.left) / r.width))
+    el.style.setProperty("--py", across((e.clientY - r.top) / r.height))
+    const hand = held.current
+    if (hand?.pointer !== e.pointerId || dial.rx <= 0) return
+    if (!hand.dragging) {
+      if (Math.abs(e.clientX - hand.x) < DRAG_PX) return
+      hand.dragging = true
+      el.setPointerCapture(e.pointerId)
+      el.dataset.dragging = ""
+    }
+    // A drag across the front of the dial turns it as far as that arc goes round.
+    spin(hand.from + ((e.clientX - hand.x) / dial.rx) * (180 / Math.PI))
+  }
+
+  const letGo = (e: PointerEvent<HTMLDivElement>) => {
+    const hand = held.current
+    if (hand?.pointer !== e.pointerId) return
+    held.current = null
+    if (!hand.dragging) return
+    delete e.currentTarget.dataset.dragging
+    spin(turnFor(aim.current, turn.current))
+  }
+
+  const onPointerLeave = (e: PointerEvent<HTMLDivElement>) => {
+    if (held.current?.dragging) return
+    e.currentTarget.style.setProperty("--px", "0")
+    e.currentTarget.style.setProperty("--py", "0")
+  }
+
+  // An orb leans toward the cursor over it, and settles back when it leaves.
+  const lean = (e: PointerEvent<HTMLDivElement>) => {
+    const seat = e.currentTarget.parentElement
+    if (!seat) return
+    const r = e.currentTarget.getBoundingClientRect()
+    const off = (v: number) =>
+      `${(held.current?.dragging ? 0 : v * MAGNET).toFixed(1)}px`
+    seat.style.setProperty("--mx", off(e.clientX - (r.left + r.width / 2)))
+    seat.style.setProperty("--my", off(e.clientY - (r.top + r.height / 2)))
+  }
+  const settle = (e: PointerEvent<HTMLDivElement>) => {
+    const seat = e.currentTarget.parentElement
+    seat?.style.setProperty("--mx", "0px")
+    seat?.style.setProperty("--my", "0px")
+  }
 
   return (
     <section
@@ -413,55 +542,113 @@ export function Stage() {
           : "radial-gradient(circle at 50% 46%, rgb(130 170 255 / 0.10), transparent 40%)",
       }}
     >
-      <div ref={field} className="@container relative min-h-[320px] flex-1">
+      <div
+        ref={field}
+        className="dial @container relative min-h-[320px] flex-1"
+        style={
+          {
+            "--cx": `${dial.cx}px`,
+            "--cy": `${dial.cy}px`,
+            "--rx": `${dial.rx}px`,
+            "--ry": `${dial.ry}px`,
+            "--big": dial.big / ORB,
+            "--small": dial.small / ORB,
+            "--tilt": dial.rx > 0 ? dial.ry / dial.rx : 0.45,
+          } as CSSProperties
+        }
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={letGo}
+        onPointerCancel={letGo}
+        onPointerLeave={onPointerLeave}
+      >
         <EvidenceCard />
         <CrowdCard />
+        {W > 0 && (
+          <div className="dial-track" aria-hidden="true">
+            <svg viewBox="0 0 100 100">
+              <circle
+                cx={50}
+                cy={50}
+                r={50}
+                fill="none"
+                stroke="var(--line-strong)"
+                strokeWidth={0.25}
+              />
+              {/* Drawn from 3 o'clock, clockwise; the seat at --at 0 is at 6 o'clock, so both rows
+                  start a quarter round, centred on it. */}
+              <circle
+                cx={50}
+                cy={50}
+                r={TICK_R}
+                fill="none"
+                stroke="#3a3a44"
+                strokeWidth={1.4}
+                strokeDasharray={`0.25 ${AROUND / CAST.length / TICKS - 0.25}`}
+                strokeDashoffset={-AROUND / 4 + 0.125}
+              />
+              <circle
+                cx={50}
+                cy={50}
+                r={TICK_R - 0.6}
+                fill="none"
+                stroke="#5a5a66"
+                strokeWidth={2.6}
+                strokeDasharray={`0.4 ${AROUND / CAST.length - 0.4}`}
+                strokeDashoffset={-AROUND / 4 + 0.2}
+              />
+            </svg>
+          </div>
+        )}
         {W > 0 &&
-          CAST.map((c) => {
+          CAST.map((c, i) => {
             const spotlit = c.id === focus
-            const at = spotlit ? center : (slots.get(c.id) ?? center)
-            const size = spotlit ? centerSize : small
             const state = characterState({ voices, waiting }, c.id)
             const reaction = reacting.get(c.id)
             return (
-              <div key={c.id}>
+              <div
+                key={c.id}
+                className="dial-seat"
+                style={
+                  {
+                    "--at": `${i * STEP}deg`,
+                    "--c": c.color,
+                    "--dim": clap ? 0.8 : 1,
+                    "--named": clap ? 1 : 0,
+                  } as CSSProperties
+                }
+              >
+                <span className="dial-foot" aria-hidden="true" />
                 <div
-                  className={`absolute ${MOVE}`}
-                  style={{
-                    left: at.x,
-                    top: at.y,
-                    width: ORB,
-                    height: ORB,
-                    transform: `translate(-50%, -50%) scale(${size / ORB})`,
-                    opacity: clap ? 0.75 : 1,
-                  }}
+                  className="dial-orb"
+                  onPointerMove={lean}
+                  onPointerLeave={settle}
                 >
-                  <VoiceOrb
-                    id={c.id}
-                    track={tracks[c.id] ?? shared}
-                    state={state}
-                    size={ORB}
-                    ripples={spotlit}
-                  />
+                  <span className="dial-lift">
+                    <VoiceOrb
+                      id={c.id}
+                      track={tracks[c.id] ?? shared}
+                      state={state}
+                      size={ORB}
+                      ripples={spotlit}
+                    />
+                  </span>
                 </div>
-                {!spotlit && (
-                  <div
-                    className={`absolute flex -translate-x-1/2 items-center gap-1.5 text-[13px] font-medium whitespace-nowrap ${MOVE} ${state === "listening" ? "text-muted-foreground" : "text-[#d6d6dd]"}`}
-                    style={{ left: at.x, top: at.y + size / 2 + 8 }}
-                  >
-                    {c.name}
-                    {c.host && W >= 560 && (
-                      <span className="text-[#6b6b76]">host</span>
-                    )}
-                    <StateMark state={state} />
-                  </div>
-                )}
+                <div
+                  className={`dial-name flex items-center gap-1.5 text-[13px] font-medium whitespace-nowrap ${state === "listening" ? "text-muted-foreground" : "text-[#d6d6dd]"}`}
+                >
+                  {c.name}
+                  {c.host && W >= 560 && (
+                    <span className="text-[#6b6b76]">host</span>
+                  )}
+                  <StateMark state={state} />
+                </div>
                 {reaction && (
                   <div
-                    className="absolute z-10 -translate-y-full"
+                    className="pointer-events-none absolute -translate-y-full"
                     style={{
-                      left: at.x + size * 0.3,
-                      top: at.y - size / 2 - 4,
+                      left: "calc(var(--size) * 0.3)",
+                      top: "calc(var(--size) / -2 - 4px)",
                     }}
                   >
                     <Bubble text={reaction} color={c.color} />
@@ -472,8 +659,9 @@ export function Stage() {
           })}
         {focus && W > 0 && (
           <div
-            className="absolute -translate-x-1/2 text-center"
-            style={{ left: center.x, top: center.y + centerSize / 2 + 16 }}
+            key={focus}
+            className="pointer-events-none absolute z-[101] -translate-x-1/2 animate-in text-center delay-700 duration-500 fill-mode-both fade-in slide-in-from-bottom-1"
+            style={{ left: dial.cx, top: front + dial.big / 2 + 16 }}
           >
             <div className="flex items-center justify-center gap-2 text-[22px] font-semibold tracking-[-0.02em]">
               {labelOf(focus)}
@@ -497,8 +685,9 @@ export function Stage() {
             until={show.until}
             size={youSize}
             style={{
-              left: center.x,
-              top: F * 0.52,
+              left: dial.cx,
+              top: dial.cy,
+              zIndex: 101,
               transform: `translate(-50%, ${-(youSize + 44) / 2}px)`,
             }}
           />
