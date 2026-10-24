@@ -39,14 +39,15 @@ from config import (
 from scout import Page, Target, as_dict, site_of
 from stats import Stats
 
-PROMPT_VERSION = 1  # bump when the prompt changes, so cached dossiers are written afresh
+PROMPT_VERSION = 2  # bump when the prompt changes, so cached dossiers are written afresh
 
 WHAT = {
     "startup": "a startup's website",
     "portfolio": "someone's portfolio",
-    "profile": "someone's professional profile",
+    "profile": "someone's professional profile or résumé",
     "github": "someone's GitHub profile",
     "website": "a website",
+    "document": "a planning document (a PRD, a BRD, a spec, a proposal or a plan)",
 }
 
 SYSTEM = """You are the head writer of Roast Room, a live comedy roast performed out loud. A \
@@ -85,8 +86,8 @@ The page, as text:
 </page>
 
 Write the dossier:
-- name: what the panel calls the target out loud: the product or company name, or a person's \
-first name.
+- name: what the panel calls the target out loud: the product or company name, a person's \
+first name, or for a planning document the product or project it plans.
 - kind: one of {kinds}.
 - one_liner: what it is, or claims to be, in one plain sentence.
 - facts: eight to twelve specific things from the page, quoting short phrases exactly where the \

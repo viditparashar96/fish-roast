@@ -10,6 +10,8 @@ export interface Setup {
   /** Paste text instead of giving a link: LinkedIn and the like only show themselves to people
    * who are logged in. */
   pasting: boolean
+  /** The uploaded file `text` was read from (a résumé, a PRD…), or null if it was pasted. */
+  file: { name: string; pages: number | null; truncated: boolean } | null
   /** What's being roasted; null to guess it from the link. */
   kind: Kind | null
   heat: Heat
@@ -29,6 +31,7 @@ export const useSetup = create<SetupState>()((set) => ({
   url: "",
   text: "",
   pasting: false,
+  file: null,
   kind: null,
   heat: "medium",
   length: "quick",
@@ -45,7 +48,8 @@ export const useSetup = create<SetupState>()((set) => ({
 export const KINDS: { id: Kind; label: string }[] = [
   { id: "startup", label: "Startup" },
   { id: "portfolio", label: "Portfolio" },
-  { id: "profile", label: "LinkedIn / CV" },
+  { id: "profile", label: "Résumé / LinkedIn" },
+  { id: "document", label: "PRD / plan" },
   { id: "github", label: "GitHub" },
   { id: "website", label: "Anything else" },
 ]
@@ -168,7 +172,8 @@ export type Json =
 
 /** The session's start body: the bot reads it as `runner_args.body`. Pasted text wins over the
  * link (which is still sent: the card shows it); with neither a kind nor a link, the bot guesses
- * from the text. */
+ * from the text. Uploaded text comes with its file's name, which titles it until the writers'
+ * room names it. */
 export function startBody(setup: Setup): Json {
   // Nothing to roast is how the bot is asked for its sample.
   if (setup.sample)
@@ -178,6 +183,7 @@ export function startBody(setup: Setup): Json {
     target: {
       url,
       text: setup.pasting ? setup.text.trim() : "",
+      file: setup.pasting && setup.file ? setup.file.name : "",
       kind: setup.kind ?? (url ? guessKind(url) : null),
     },
     heat: setup.heat,

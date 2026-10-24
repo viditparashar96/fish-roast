@@ -84,6 +84,38 @@ def test_pasted_text_that_reads_like_a_cv_is_a_profile() -> None:
     assert detect_kind("", "We sell shoes.") == "website"
 
 
+def test_text_that_reads_like_a_plan_is_a_document() -> None:
+    prd = "Acme Checkout PRD\nProblem statement\nGoals\nNon-goals\nUser stories\nMilestones"
+    assert detect_kind("", prd) == "document"
+    # A CV that mentions its objective and skills is still a CV.
+    cv = "Objective\nExperience\nEducation\nSkills\nSummary"
+    assert detect_kind("", cv) == "profile"
+
+
+@pytest.mark.parametrize(
+    ("file", "kind"),
+    [
+        ("Jane_Doe_Resume.pdf", "profile"),
+        ("cv-2026.pdf", "profile"),
+        ("Checkout PRD v3.pdf", "document"),
+        ("q3-roadmap.md", "document"),
+        ("notes.txt", "website"),
+    ],
+)
+def test_an_uploaded_files_name_says_what_it_is(file: str, kind: str) -> None:
+    assert detect_kind("", "We sell shoes.", file) == kind
+
+
+async def test_an_uploaded_file_is_titled_by_its_name_until_the_text_has_one() -> None:
+    body = {"target": {"text": "x" * 120 + "\n" + WORDS, "file": "C:\\docs\\Acme_PRD_v3.pdf"}}
+    target = target_from(body)
+    assert (target.file, target.kind) == ("Acme_PRD_v3.pdf", "document")
+    page = await scout.read(target)
+    assert page.title == "Acme PRD v3"
+    # A file's name only comes with its text.
+    assert target_from({"target": {"url": "acme.ai", "file": "a.pdf"}}).file == ""
+
+
 @pytest.mark.parametrize(
     ("given", "url"),
     [

@@ -1,6 +1,8 @@
 """The target: what the client asked to roast, and reading it.
 
 A target is a link, pasted text, or both: the text wins, since it's what the user chose to share.
+Text can come from a file the user uploaded (a résumé, a PRD, a plan): the client reads it, and
+sends its text with the file's name, which titles it until the writers' room names it.
 A link is read by Firecrawl (`/v2/scrape`: the page as markdown, its metadata and a screenshot)
 when there's a key, or fetched plainly otherwise (no JavaScript, so some sites read thin). A site
 that only shows itself to people who are logged in (LinkedIn, X, Instagram…), or a page with next
@@ -52,6 +54,22 @@ WALLED = {
     "tiktok.com": "TikTok is behind a login. Paste the bio and captions here.",
     "threads.net": "Threads is behind a login. Paste the posts here.",
 }
+# Headings that say what pasted or uploaded text is: a CV, or a plan (a PRD, a BRD, a spec).
+CV_HEADINGS = re.compile(r"\b(Experience|Education|Skills|Summary)\b")
+PLAN_HEADINGS = re.compile(
+    r"\b(Requirements?|User stor(?:y|ies)|Goals?|Non-goals?|Scope|Milestones?|Stakeholders?"
+    r"|Success metrics?|Problem statement|Objectives?|Assumptions|Risks|Timeline|Roadmap"
+    r"|Acceptance criteria|Personas?|KPIs?|Business requirements?|Functional requirements?)\b",
+    re.IGNORECASE,
+)
+# ...and words in an uploaded file's name that say the same.
+CV_FILE = re.compile(r"(?<![a-z])(cv|resume|résumé)(?![a-z])", re.IGNORECASE)
+PLAN_FILE = re.compile(
+    r"(?<![a-z])(prd|brd|mrd|spec|specs|plan|proposal|roadmap|strategy|requirements)(?![a-z])",
+    re.IGNORECASE,
+)
+MAX_FILE_NAME = 120
+
 THIN = (
     "There's barely anything on that page to roast: it may need a login, or build itself with "
     "JavaScript. Paste the text instead."
@@ -120,6 +138,7 @@ class Target:
     heat: str = DEFAULT_HEAT
     length: str = DEFAULT_LENGTH
     error: str = ""
+    file: str = ""  # the name of the file the text came from, if it was uploaded
 
     @property
     def site(self) -> str:
@@ -172,15 +191,22 @@ def target_from(body: Any) -> Target:
     length = str(body.get("length") or "")
     length = length if length in SPOTLIGHTS else DEFAULT_LENGTH
     text = clean_text(str(raw.get("text") or ""))[:MAX_TEXT_CHARS]
+    file = file_name(raw.get("file")) if text else ""
     given = str(raw.get("url") or "").strip()
     url = normalize_url(given)
     asked = str(raw.get("kind") or "")
-    kind = asked if asked in KINDS else detect_kind(url, text)
+    kind = asked if asked in KINDS else detect_kind(url, text, file)
     if given and not url and not text:
         return Target(kind=kind, heat=heat, length=length, error=f"“{given}” isn't a web link.")
     if not url and not text:
         return Target(SAMPLE_URL, SAMPLE, "startup", heat, length)
-    return Target(url, text, kind, heat, length)
+    return Target(url, text, kind, heat, length, file=file)
+
+
+def file_name(value: Any) -> str:
+    """An uploaded file's name, as the client gave it: no folders, no control characters."""
+    name = re.split(r"[\\/]", str(value or ""))[-1]
+    return re.sub(r"[\x00-\x1f\x7f]", "", name).strip()[:MAX_FILE_NAME]
 
 
 def normalize_url(url: str) -> str:
@@ -206,8 +232,9 @@ def on(host: str, domain: str) -> bool:
     return host == domain or host.endswith("." + domain)
 
 
-def detect_kind(url: str, text: str = "") -> str:
-    """A guess at what's being roasted, from the link (the client can say otherwise)."""
+def detect_kind(url: str, text: str = "", file: str = "") -> str:
+    """A guess at what's being roasted, from the link, or from the text and the name of the file
+    it came from (the client can say otherwise)."""
     host, path = site_of(url), urlparse(url).path.lower()
     if on(host, "linkedin.com"):
         return "profile"
@@ -217,8 +244,15 @@ def detect_kind(url: str, text: str = "") -> str:
         return "portfolio"
     if host:
         return "startup"
-    headings = re.findall(r"\b(Experience|Education|Skills|Summary)\b", text)
-    return "profile" if len(set(headings)) >= 2 else "website"
+    if CV_FILE.search(file):
+        return "profile"
+    if PLAN_FILE.search(file):
+        return "document"
+    cv = len(set(CV_HEADINGS.findall(text)))
+    plan = len({h.lower() for h in PLAN_HEADINGS.findall(text)})
+    if plan >= 3 and plan > cv:
+        return "document"
+    return "profile" if cv >= 2 else "website"
 
 
 def walled(url: str) -> str | None:
@@ -234,7 +268,8 @@ async def read(
     without a key). Raises `NeedsText` for a walled site or a page with too little on it, and
     `ScoutError` for anything else that goes wrong (a dead link, a timeout)."""
     if target.text:
-        return Page(target.url, title_of(target.text), "", target.text, "text")
+        title = title_of(target.text) or title_of_file(target.file)
+        return Page(target.url, title, "", target.text, "text")
     if why := walled(target.url):
         raise NeedsText(why)
     client = http or httpx.AsyncClient()
@@ -413,6 +448,12 @@ def clean_markdown(markdown: str) -> str:
     # A bare address, up to its last character that isn't the sentence's punctuation.
     markdown = re.sub(r"https?://[^\s<>()\[\]]*[^\s<>()\[\].,;:!?'\"]", "", markdown)
     return clean_text(markdown)
+
+
+def title_of_file(name: str) -> str:
+    """An uploaded file's name as a title: "Acme_PRD_v3.pdf" is "Acme PRD v3"."""
+    stem = re.sub(r"\.[A-Za-z0-9]{1,5}$", "", name)
+    return " ".join(re.sub(r"[_\-.]+", " ", stem).split())[:90]
 
 
 def title_of(text: str) -> str:

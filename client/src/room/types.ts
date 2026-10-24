@@ -139,7 +139,8 @@ export interface CastMessage {
 
 export type Heat = "mild" | "medium" | "extra_crispy"
 export type Length = "quick" | "full"
-export type Kind = "startup" | "portfolio" | "profile" | "github" | "website"
+export type Kind =
+  "startup" | "portfolio" | "profile" | "github" | "website" | "document"
 
 /** The show's segments, in order (`server/show.py`); "wait" is the show waiting for you to clap
  * back, and "silence" the host saying you didn't. */
@@ -174,7 +175,15 @@ export interface PageStats {
 
 /** The producer's progress: reading the target, the writers' room, and what went wrong. */
 export type PrepMessage = { type: "prep"; at: number } & (
-  | { stage: "reading"; url: string; site: string; kind: Kind; pasted: boolean }
+  | {
+      stage: "reading"
+      url: string
+      site: string
+      kind: Kind
+      pasted: boolean
+      /** The uploaded file the text came from ("" if it was pasted). */
+      file?: string
+    }
   | {
       stage: "read"
       url: string

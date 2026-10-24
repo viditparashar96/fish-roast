@@ -98,7 +98,7 @@ function prepText(prep: Partial<Record<PrepMessage["stage"], PrepMessage>>) {
   const reading = prep.reading?.stage === "reading" ? prep.reading : null
   if (!prep.read)
     return reading
-      ? `Reading ${reading.pasted ? "your paste" : reading.site}…`
+      ? `Reading ${reading.pasted ? reading.file || "your paste" : reading.site}…`
       : "The panel is taking the stage…"
   if (!prep.ready) return "The writers' room is sharpening the knives…"
   return "The panel is getting its first look…"
@@ -171,7 +171,7 @@ function EvidenceCard() {
       <div className="truncate text-[13px] text-[#d6d6dd]">
         {dossier?.name ??
           page?.title ??
-          (reading?.pasted ? "Your paste" : reading?.site)}
+          (reading?.pasted ? reading.file || "Your paste" : reading?.site)}
       </div>
       {top.length > 0 && (
         <div className="flex flex-wrap gap-[5px]">

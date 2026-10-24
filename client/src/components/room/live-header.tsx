@@ -20,7 +20,7 @@ function RunOfShow() {
     return (
       <span className="text-xs text-muted-foreground">
         {reading?.stage === "reading"
-          ? `Reading ${reading.pasted ? "your paste" : reading.site}…`
+          ? `Reading ${reading.pasted ? reading.file || "your paste" : reading.site}…`
           : "Taking the stage…"}
       </span>
     )

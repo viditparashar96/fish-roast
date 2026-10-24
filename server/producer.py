@@ -52,7 +52,12 @@ class Producer:
             await self.error(target.error)
             return
         await self.emit(
-            "reading", url=target.url, site=target.site, kind=target.kind, pasted=bool(target.text)
+            "reading",
+            url=target.url,
+            site=target.site,
+            kind=target.kind,
+            pasted=bool(target.text),
+            file=target.file,
         )
         page = await self.read()
         if page is None:

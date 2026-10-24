@@ -1,18 +1,26 @@
 import {
   ChevronDown,
   FileText,
+  FileUp,
   Flame,
   Globe,
   LoaderCircle,
   Undo2,
+  X,
 } from "lucide-react"
-import { type FormEvent, useRef } from "react"
+import { type DragEvent, type FormEvent, useRef, useState } from "react"
 import { flushSync } from "react-dom"
 
 import { Logo } from "@/components/room/logo"
 import { Orb } from "@/components/room/orb"
 import { cn } from "@/lib/utils"
 import { CAST } from "@/room/cast"
+import {
+  ACCEPT,
+  DocumentError,
+  guessDocumentKind,
+  readDocument,
+} from "@/room/documents"
 import {
   HEATS,
   KINDS,
@@ -27,9 +35,10 @@ import type { Kind } from "@/room/types"
 const DETECTED: Record<Kind, string> = {
   startup: "a startup or product page",
   portfolio: "a portfolio",
-  profile: "a LinkedIn profile or CV",
+  profile: "a LinkedIn profile or résumé",
   github: "a GitHub profile",
   website: "a website",
+  document: "a PRD or a plan",
 }
 
 const LABEL =
@@ -91,8 +100,9 @@ function Segmented<T extends string>({
 }
 
 /**
- * Before a show: what to roast (a link, or pasted text), what it is, how hot and how long; who's
- * on tonight's panel; and why the last try didn't work, if it didn't.
+ * Before a show: what to roast (a link, pasted text, or an uploaded résumé, PRD or plan, read
+ * into text here), what it is, how hot and how long; who's on tonight's panel; and why the last
+ * try didn't work, if it didn't.
  */
 export function SetupScreen({
   onConnect,
@@ -105,6 +115,11 @@ export function SetupScreen({
 }) {
   const setup = useSetup()
   const input = useRef<HTMLInputElement>(null)
+  const picker = useRef<HTMLInputElement>(null)
+  // A file being read (its name), why the last one couldn't be, and one dragged over the form.
+  const [opening, setOpening] = useState<string | null>(null)
+  const [fileError, setFileError] = useState<string | null>(null)
+  const [dragging, setDragging] = useState(false)
   const blocked = setup.pasting ? null : walled(setup.url)
   const ready = canRoast(setup) && !connecting
   const guessed = setup.url.trim() ? guessKind(setup.url) : null
@@ -116,6 +131,36 @@ export function SetupScreen({
   const start = (e?: FormEvent) => {
     e?.preventDefault()
     if (ready) void onConnect()
+  }
+  // An uploaded file is read into text here, and roasted as pasted text: it shows in the text
+  // box, to trim if they like, and what it is is guessed from its name and its headings.
+  const upload = async (file: File | undefined) => {
+    if (!file || connecting) return
+    setOpening(file.name)
+    setFileError(null)
+    try {
+      const doc = await readDocument(file)
+      const guess = guessDocumentKind(doc.name, doc.text)
+      setup.set({
+        pasting: true,
+        text: doc.text,
+        file: { name: doc.name, pages: doc.pages, truncated: doc.truncated },
+        kind: guess === "website" ? null : guess,
+      })
+    } catch (error) {
+      setFileError(
+        error instanceof DocumentError
+          ? error.message
+          : "That file couldn't be read. Paste its text instead."
+      )
+    } finally {
+      setOpening(null)
+    }
+  }
+  const drop = (e: DragEvent) => {
+    e.preventDefault()
+    setDragging(false)
+    void upload(e.dataTransfer.files[0])
   }
   // The start request is read from the setup as it renders: settle it first.
   const sample = () => {
@@ -165,21 +210,74 @@ export function SetupScreen({
             Get your startup roasted. Live.
           </h1>
           <p className="max-w-[600px] text-lg leading-relaxed text-pretty text-muted-foreground">
-            Paste a link. A panel of AI comedians reads it, roasts it out loud,
-            riffs on each other, and hands you a scorecard with fixes that
-            actually help.
+            Paste a link, or drop in your résumé or a PRD. A panel of AI
+            comedians reads it, roasts it out loud, riffs on each other, and
+            hands you a scorecard with fixes that actually help.
           </p>
 
           <form
             onSubmit={start}
+            onDragOver={(e) => {
+              if (!e.dataTransfer.types.includes("Files")) return
+              e.preventDefault()
+              setDragging(true)
+            }}
+            onDragLeave={(e) => {
+              if (!e.currentTarget.contains(e.relatedTarget as Node | null))
+                setDragging(false)
+            }}
+            onDrop={drop}
             className="mt-2.5 flex w-full flex-col gap-3 text-left"
           >
+            <input
+              ref={picker}
+              type="file"
+              accept={ACCEPT}
+              hidden
+              onChange={(e) => {
+                void upload(e.target.files?.[0])
+                e.target.value = ""
+              }}
+            />
             <div
               className={cn(
-                "flex flex-wrap items-center gap-2 rounded-2xl border border-[#2a2a32] bg-surface p-2 shadow-[0_30px_80px_-30px_rgb(0_0_0/0.8),0_0_0_4px_rgb(255_255_255/0.02)]",
-                setup.pasting && "items-stretch"
+                "relative flex flex-wrap items-center gap-2 rounded-2xl border border-[#2a2a32] bg-surface p-2 shadow-[0_30px_80px_-30px_rgb(0_0_0/0.8),0_0_0_4px_rgb(255_255_255/0.02)] transition-colors",
+                setup.pasting && "items-stretch",
+                dragging && "border-ember/60 bg-ember/5"
               )}
             >
+              {dragging && (
+                <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center gap-2 rounded-2xl bg-background/80 text-sm font-medium text-[#ffa27f] backdrop-blur-sm">
+                  <FileUp className="size-4" aria-hidden="true" />
+                  Drop your résumé, PRD or plan to roast it
+                </div>
+              )}
+              {setup.pasting && setup.file && (
+                <div className="flex min-w-0 flex-[1_1_100%] items-center gap-2 rounded-xl border border-line-strong bg-secondary px-3 py-2 text-[13px]">
+                  <FileText
+                    className="size-4 shrink-0 text-[#ffa27f]"
+                    aria-hidden="true"
+                  />
+                  <span className="truncate font-medium text-[#d6d6dd]">
+                    {setup.file.name}
+                  </span>
+                  <span className="shrink-0 text-subtle">
+                    {setup.file.pages !== null &&
+                      `${setup.file.pages} ${setup.file.pages === 1 ? "page" : "pages"} · `}
+                    {words.toLocaleString()} words
+                    {setup.file.truncated && " · cut to fit"}
+                  </span>
+                  <span className="flex-1" />
+                  <button
+                    type="button"
+                    aria-label={`Remove ${setup.file.name}`}
+                    onClick={() => setup.set({ text: "", file: null })}
+                    className="-mr-1 rounded-md p-1 text-muted-foreground transition-colors hover:bg-[#23232a] hover:text-foreground"
+                  >
+                    <X className="size-3.5" aria-hidden="true" />
+                  </button>
+                </div>
+              )}
               {setup.pasting ? (
                 <textarea
                   value={setup.text}
@@ -187,7 +285,7 @@ export function SetupScreen({
                   rows={6}
                   autoFocus
                   aria-label="Text to roast"
-                  placeholder="Paste a LinkedIn profile (More → Save to PDF), a bio, an about page…"
+                  placeholder="Paste a LinkedIn profile (More → Save to PDF), a bio, a PRD… or drop a PDF here"
                   className="min-h-36 min-w-0 flex-[1_1_100%] resize-y bg-transparent px-3 py-2 text-base leading-snug outline-none placeholder:text-subtle"
                 />
               ) : (
@@ -247,27 +345,58 @@ export function SetupScreen({
             </div>
 
             <div className="flex flex-wrap justify-between gap-2 px-1 text-[13px] text-muted-foreground">
-              <button
-                type="button"
-                onClick={() => setup.set({ pasting: !setup.pasting })}
-                className="inline-flex items-center gap-1.5 transition-colors hover:text-foreground"
-              >
-                {setup.pasting ? (
-                  <>
-                    <Undo2 className="size-3.5" aria-hidden="true" />
-                    Roast a link instead
-                  </>
-                ) : (
-                  <>
-                    <FileText className="size-3.5" aria-hidden="true" />
-                    Paste text instead (LinkedIn, a bio)
-                  </>
-                )}
-              </button>
+              <span className="inline-flex flex-wrap items-center gap-x-4 gap-y-1">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setup.set({ pasting: !setup.pasting, file: null })
+                  }
+                  className="inline-flex items-center gap-1.5 transition-colors hover:text-foreground"
+                >
+                  {setup.pasting ? (
+                    <>
+                      <Undo2 className="size-3.5" aria-hidden="true" />
+                      Roast a link instead
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="size-3.5" aria-hidden="true" />
+                      Paste text instead (LinkedIn, a bio)
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  disabled={opening !== null}
+                  onClick={() => picker.current?.click()}
+                  className="inline-flex items-center gap-1.5 transition-colors hover:text-foreground disabled:opacity-60"
+                >
+                  {opening ? (
+                    <>
+                      <LoaderCircle
+                        className="size-3.5 animate-spin"
+                        aria-hidden="true"
+                      />
+                      Reading {opening}…
+                    </>
+                  ) : (
+                    <>
+                      <FileUp className="size-3.5" aria-hidden="true" />
+                      Upload a résumé or PRD (PDF)
+                    </>
+                  )}
+                </button>
+              </span>
               {setup.pasting ? (
-                <span className={cn(words < 20 && "text-warn")}>
-                  {words} words{words < 20 && ", a paragraph at least"}
-                </span>
+                setup.file ? (
+                  setup.kind === null ? null : (
+                    <span>Reads like: {DETECTED[setup.kind]}</span>
+                  )
+                ) : (
+                  <span className={cn(words < 20 && "text-warn")}>
+                    {words} words{words < 20 && ", a paragraph at least"}
+                  </span>
+                )
               ) : (
                 guessed &&
                 setup.kind === null && (
@@ -350,6 +479,13 @@ export function SetupScreen({
             >
               Your LinkedIn
             </button>
+            <button
+              type="button"
+              onClick={() => picker.current?.click()}
+              className="inline-flex h-[30px] items-center rounded-full border border-line-strong bg-surface px-3 text-[#c9c9d1] transition-colors hover:border-[#3a3a44] hover:text-white"
+            >
+              Your résumé (PDF)
+            </button>
           </div>
           <p className="text-xs text-subtle">
             Roast yourself, your own work, or a friend who asked for it. The
@@ -360,6 +496,11 @@ export function SetupScreen({
             aria-live="polite"
             aria-atomic="true"
           >
+            {fileError && (
+              <p role="alert" className="text-warn">
+                {fileError}
+              </p>
+            )}
             {setup.problem && (
               <p role="alert" className="text-warn">
                 {setup.problem.message}

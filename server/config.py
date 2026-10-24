@@ -163,7 +163,7 @@ HEAT_RULES = {
 }
 SPOTLIGHTS = {"quick": 3, "full": 4}  # how many roasters get the spotlight, by the show's length
 DEFAULT_LENGTH = "quick"
-KINDS = ("startup", "portfolio", "profile", "github", "website")
+KINDS = ("startup", "portfolio", "profile", "github", "website", "document")
 # Who takes the spotlight, in order, for each kind of target; a quick show takes the first three.
 # Roasters missing from a lineup (a cast changed in characters.json) go on at the end.
 LINEUPS = {
@@ -172,6 +172,8 @@ LINEUPS = {
     "profile": ("zoe", "chad", "margot", "dev"),
     "github": ("dev", "zoe", "chad", "margot"),
     "website": ("zoe", "margot", "chad", "dev"),
+    # A PRD, BRD, spec or plan: will it build, will it sell, does it read, does anyone care.
+    "document": ("dev", "chad", "margot", "zoe"),
 }
 SEGMENT_BEAT_S = 0.3  # between one segment of the show landing and the next starting
 CLAP_BACK_WAIT_S = 20.0  # how long the panel waits for the guest to defend themselves
