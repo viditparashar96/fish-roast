@@ -129,9 +129,9 @@ def test_what_the_host_wants_needs_jev_to_be_sure() -> None:
 
 def test_jev_split_on_who_still_means_someone() -> None:
     """After a burn at the guest, Jev was sure someone would pile on but split three ways."""
-    split = {"nana": 0.34, DEV: 0.30, ZOE: 0.23, NOBODY: 0.13}
+    split = {"margot": 0.34, DEV: 0.30, ZOE: 0.23, NOBODY: 0.13}
     burn = Reading("reply", CHAD, "…", USER, react=split, pile_on=split)
-    assert burn.piler(0.5) == "nana" and burn.reactor(0.6) == "nana"
+    assert burn.piler(0.5) == "margot" and burn.reactor(0.6) == "margot"
     assert Reading("reply", CHAD, "…", USER, pile_on={ZOE: 0.3, NOBODY: 0.7}).piler(0.5) is None
     # Never the speaker topping their own burn.
     assert Reading("reply", CHAD, "…", USER, pile_on={CHAD: 0.9, NOBODY: 0.1}).piler(0.5) is None

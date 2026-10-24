@@ -87,9 +87,9 @@ def run(show: Show, transcript: Transcript, guest_says: str | None = None) -> li
 
 
 def test_the_lineup_depends_on_what_is_roasted() -> None:
-    assert lineup(CAST, "startup", 3) == ["chad", "dev", "nana"]
-    assert lineup(CAST, "portfolio", 3) == ["margot", "zoe", "nana"]
-    assert lineup(CAST, "github", 5)[0] == "dev" and len(lineup(CAST, "github", 5)) == 5
+    assert lineup(CAST, "startup", 3) == ["chad", "dev", "zoe"]
+    assert lineup(CAST, "portfolio", 3) == ["margot", "zoe", "dev"]
+    assert lineup(CAST, "github", 4)[0] == "dev" and len(lineup(CAST, "github", 4)) == 4
     # Roasters a lineup leaves out go on at the end; the host is never in the spotlight.
     assert sorted(lineup(CAST, "no-such-kind", 9)) == sorted(ROASTERS)
 
@@ -101,7 +101,7 @@ def test_a_quick_show_runs_in_order_and_ends() -> None:
         "intro",
         "spotlight:chad",
         "spotlight:dev",
-        "spotlight:nana",
+        "spotlight:zoe",
         "lightning_ask",
         "lightning",
         "clap_back",
@@ -126,7 +126,7 @@ def test_the_panel_introduce_themselves_while_the_writers_room_works() -> None:
 
 def test_the_guest_clapping_back_takes_the_place_of_the_silence() -> None:
     played = run(make_show(length="full"), Transcript(CAST), guest_says="Our pricing is fair!")
-    assert sum(p.startswith("spotlight") for p in played) == 5
+    assert sum(p.startswith("spotlight") for p in played) == 4
     assert "silence" not in played
     assert played[played.index("clap_back") :] == ["clap_back", "guest", "verdict", "closing"]
 
@@ -210,7 +210,7 @@ def test_each_segment_is_planned_with_its_voices_and_notes() -> None:
     note = lightning.takes[0].note or ""
     assert lightning.together and "Nigel just asked" in note and "real business model" in note
     first, second, third = show.plan(Segment(VERDICT), transcript).takes
-    assert [t.speaker for t in (first, second, third)] == ["chad", "dev", "nana"]
+    assert [t.speaker for t in (first, second, third)] == ["chad", "dev", "zoe"]
     assert "you go first" in (first.note or "")
     assert "Chad has given theirs" in (second.note or "")
     assert "Chad and Dev have given theirs" in (third.note or "")
@@ -239,7 +239,7 @@ def test_the_closing_knows_the_scores_and_the_card_has_the_night() -> None:
     transcript.add("zoe", "Oof!", how=REACTION, reason="react")
     transcript.add("chad", "Three out of ten. Charge more.", reason=VERDICT)
     transcript.add("dev", "Five out of ten. Ship it.", reason=VERDICT)
-    transcript.add("nana", "Lovely, dear.", reason=VERDICT)
+    transcript.add("zoe", "Lovely, honestly.", reason=VERDICT)
     assert show.scores(transcript) == {"chad": 3, "dev": 5} and show.final_score(transcript) == 4
     [closing] = show.plan(Segment(CLOSING), transcript).takes
     assert "Chad 3 and Dev 5" in (closing.note or "")
@@ -261,6 +261,6 @@ def test_the_client_is_told_where_the_show_is() -> None:
     message = show.to_message()
     assert (message["segment"], message["step"]) == (COLD_OPEN, 0)
     assert message["run"][:3] == ["cold_open", "intro", "spotlight:chad"]
-    assert message["lineup"] == ["chad", "dev", "nana"]
+    assert message["lineup"] == ["chad", "dev", "zoe"]
     waiting = show.to_message(Segment(WAIT), until=123.0)
     assert waiting["step"] == show.step(Segment(CLAP_BACK)) and waiting["until"] == 123.0

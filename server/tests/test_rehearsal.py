@@ -42,7 +42,7 @@ def test_lines_fill_in_the_target_and_never_repeat_running() -> None:
     assert "4.5 out of ten" in host.line(view(closing))
 
 
-@pytest.mark.parametrize("who", ["chad", "zoe", "dev", "margot", "nana"])
+@pytest.mark.parametrize("who", ["chad", "zoe", "dev", "margot"])
 def test_every_roasters_verdict_has_a_score(who: str) -> None:
     verdict = ScriptedLLM(CAST[who]).line(view("Verdict time, and you go first."))
     assert score_in(verdict) is not None

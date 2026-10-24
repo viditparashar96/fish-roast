@@ -31,7 +31,7 @@ def test_the_start_body_says_what_to_roast_how_hot_and_how_long() -> None:
         {"target": {"url": "acme.ai/", "kind": "startup"}, "heat": "extra_crispy", "length": "full"}
     )
     assert target == Target("https://acme.ai/", "", "startup", "extra_crispy", "full")
-    assert target.site == "acme.ai" and target.spotlights == 5
+    assert target.site == "acme.ai" and target.spotlights == 4
     # A flat body works too, and anything unknown falls back to the defaults.
     flat = target_from({"url": "https://www.acme.ai", "heat": "volcanic", "length": "epic"})
     assert (flat.url, flat.heat, flat.length) == (

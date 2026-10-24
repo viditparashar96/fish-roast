@@ -1,4 +1,4 @@
-"""Six voices on one WebRTC audio track, for running without Daily.
+"""Every voice on one WebRTC audio track, for running without Daily.
 
 Daily gives each character an audio track of their own, and the browser mixes them. SmallWebRTC
 (Pipecat's peer-to-peer transport: no account, no key) has one track, and writes every frame to

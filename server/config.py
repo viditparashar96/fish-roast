@@ -46,9 +46,9 @@ FISH_PAIRED_TAGS = ("whisper", "emphasis", "soft", "fast", "slow", "stress", "fo
 # more colour and more difference from take to take, which a roast panel wants.
 FISH_TEMPERATURE = 0.9
 FISH_TOP_P = 0.85
-# Fish Audio's first tier holds 5 voices open at once, and the panel is six: past this many, the
-# rest (the host first) speak in the next voice there's a key for, Cartesia's or OpenAI's. Set
-# FISH_MAX_VOICES=6 in .env on a plan that allows it.
+# Fish Audio's first tier holds 5 voices open at once, which is why the panel is five. A bigger
+# cast (characters.json) has the rest, the host first, speak in the next voice there's a key for,
+# Cartesia's or OpenAI's; raise FISH_MAX_VOICES in .env on a plan that allows more.
 FISH_MAX_VOICES = 5
 
 # --- Workers ----------------------------------------------------------------------------------
@@ -161,17 +161,17 @@ HEAT_RULES = {
         "clean: 'damn' and 'hell' at most."
     ),
 }
-SPOTLIGHTS = {"quick": 3, "full": 5}  # how many roasters get the spotlight, by the show's length
+SPOTLIGHTS = {"quick": 3, "full": 4}  # how many roasters get the spotlight, by the show's length
 DEFAULT_LENGTH = "quick"
 KINDS = ("startup", "portfolio", "profile", "github", "website")
 # Who takes the spotlight, in order, for each kind of target; a quick show takes the first three.
 # Roasters missing from a lineup (a cast changed in characters.json) go on at the end.
 LINEUPS = {
-    "startup": ("chad", "dev", "nana", "zoe", "margot"),
-    "portfolio": ("margot", "zoe", "nana", "dev", "chad"),
-    "profile": ("zoe", "chad", "nana", "margot", "dev"),
-    "github": ("dev", "zoe", "nana", "chad", "margot"),
-    "website": ("zoe", "margot", "nana", "chad", "dev"),
+    "startup": ("chad", "dev", "zoe", "margot"),
+    "portfolio": ("margot", "zoe", "dev", "chad"),
+    "profile": ("zoe", "chad", "margot", "dev"),
+    "github": ("dev", "zoe", "chad", "margot"),
+    "website": ("zoe", "margot", "chad", "dev"),
 }
 SEGMENT_BEAT_S = 0.3  # between one segment of the show landing and the next starting
 CLAP_BACK_WAIT_S = 20.0  # how long the panel waits for the guest to defend themselves

@@ -31,7 +31,7 @@ from room import (
 CAST = load_cast()
 IDS = [c.id for c in CAST]
 NIGEL, CHAD, ZOE, DEV = IDS[:4]
-NANA = IDS[5]
+MARGOT = IDS[4]
 LINE = "That is a fine idea, but I think the soup needs more salt than that."  # 15 words
 
 
@@ -178,11 +178,11 @@ def test_the_host_can_tell_the_table_to_carry_on(engine: Engine) -> None:
 
 def test_carry_on_goes_back_to_whoever_was_cut_off(engine: Engine) -> None:
     engine.transcript.add(CHAD, "I'd sooner trust a seagull with", interrupted=True)
-    said(engine, "Hang on, Nana Bea, what do you think?")
-    engine.route(route(IDS[5]))
-    engine.transcript.add(IDS[5], "Back in my day, we cooked with memory.")
+    said(engine, "Hang on, Margot, what do you think?")
+    engine.route(route(IDS[4]))
+    engine.transcript.add(IDS[4], "Back in my day, we cooked with memory.")
     said(engine, "Sorry, carry on.")
-    plan = engine.route(route(IDS[5], intent={"answer": 0.0, CARRY_ON: 1.0, HUSH: 0.0}))
+    plan = engine.route(route(IDS[4], intent={"answer": 0.0, CARRY_ON: 1.0, HUSH: 0.0}))
     [take] = plan.takes
     assert (take.speaker, take.note) == (CHAD, NOTE_CARRY_ON_CUT)
 
@@ -279,11 +279,11 @@ def test_a_burn_that_lands_harder_gets_a_second_laugh(talkative: Engine) -> None
     gets one, and from 0.15 the next likeliest laughs along."""
     engine = talkative
     engine.transcript.add(DEV, "Chad's soup could strip paint.")
-    big = {ZOE: 0.1, NANA: 0.08, NOBODY: 0.82}
-    assert [r.speaker for r in engine.after(line(DEV, USER, react=big)).reactions] == [ZOE, NANA]
-    small = {NANA: 0.07, NOBODY: 0.93}
-    assert [r.speaker for r in engine.after(line(DEV, USER, react=small)).reactions] == [NANA]
-    flat = {NANA: 0.04, NOBODY: 0.96}
+    big = {ZOE: 0.1, MARGOT: 0.08, NOBODY: 0.82}
+    assert [r.speaker for r in engine.after(line(DEV, USER, react=big)).reactions] == [ZOE, MARGOT]
+    small = {MARGOT: 0.07, NOBODY: 0.93}
+    assert [r.speaker for r in engine.after(line(DEV, USER, react=small)).reactions] == [MARGOT]
+    flat = {MARGOT: 0.04, NOBODY: 0.96}
     assert engine.after(line(DEV, USER, react=flat)).reactions == ()
 
 
@@ -378,5 +378,5 @@ def test_a_bit_never_runs_past_its_cap_however_lively(engine: Engine) -> None:
     engine.transcript.add(ZOE, "Two.", chorus=7)
     assert engine.said() == 1  # a chorus is one line
     for i in range(MAX_BIT_LINES - 2):
-        engine.transcript.add((DEV, NANA)[i % 2], "And another.")
-    assert engine.after(burn(NANA, ZOE)).why == "user"
+        engine.transcript.add((DEV, MARGOT)[i % 2], "And another.")
+    assert engine.after(burn(MARGOT, ZOE)).why == "user"

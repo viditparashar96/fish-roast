@@ -146,27 +146,6 @@ LINES: dict[str, dict[str, list[str]]] = {
         "lightning": ["Synergy, but beige.", "Comic Sans with ambition."],
         "verdict": ["Five out of ten. One font, one promise, and a photo of a real customer."],
     },
-    "nana": {
-        "meet": ["I'm Nana Bea, dear. I'm judging whether I'd put {name} on the fridge."],
-        "cold_open": ["Oh, dear.", "Is it a game?"],
-        "spotlight": [
-            "So {name} is a website that does the computer things, dear? Well, I'm proud of you "
-            "anyway.",
-            "I read the whole page twice, dear, and I still don't know what you sell. But the "
-            "colours are cheerful.",
-        ],
-        "pile_on": [
-            "Oh, and why does everything have to be AI now? Even my toaster has opinions.",
-            "My bridge club could run this. On paper. With a pencil.",
-        ],
-        "reply": [
-            "Chad, sweetheart, you said the same thing about my lemon bars.",
-            "Speak up, dear, I only heard the word mid.",
-        ],
-        "react": ["Oh my!", "Goodness.", "Well, I never."],
-        "lightning": ["A very busy website.", "Something for the young people."],
-        "verdict": ["Seven out of ten, dear, for effort. Now tell people what it does."],
-    },
 }
 GENERIC = {
     "reply": ["Well, that's one way to put it.", "I'll allow it."],

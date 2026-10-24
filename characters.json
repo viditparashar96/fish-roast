@@ -79,21 +79,5 @@
     "fishVoiceName": "Sophia",
     "openaiVoice": "shimmer",
     "voiceStyle": "A dramatic, exacting creative director: theatrical gasps, withering precision."
-  },
-  {
-    "id": "nana",
-    "name": "Nana Bea",
-    "role": "Grandma",
-    "tagline": "Everyone's grandma: eighty-four, sharp as a tack, and proud of you no matter what. Mostly.",
-    "angle": "the big picture, sweetly: what on earth it even is, what normal people would make of it, and backhanded compliments",
-    "colour": "turquoise",
-    "hex": "#4fd6be",
-    "accent": "#a6f0e2",
-    "voice": "a2364c9d-1fe3-4553-9eff-100c4fe5ffc8",
-    "voiceName": "Marge",
-    "fishVoice": "b347db033a6549378b48d00acb0d06cd",
-    "fishVoiceName": "Selene",
-    "openaiVoice": "sage",
-    "voiceStyle": "A sweet, warm elderly grandmother: gentle, unhurried, innocently brutal."
   }
 ]

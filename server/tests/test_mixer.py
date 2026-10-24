@@ -1,4 +1,4 @@
-"""Six voices on one WebRTC track (`mixer.py`), offline: the track mixes voices rather than
+"""Every voice on one WebRTC track (`mixer.py`), offline: the track mixes voices rather than
 interleaving them, a write completes once its audio has played, and the client sends each frame
 to its own voice's queue."""
 
@@ -42,7 +42,7 @@ async def test_two_voices_at_once_are_mixed_not_interleaved() -> None:
 
 async def test_a_voice_alone_plays_as_it_is() -> None:
     track = MixingAudioTrack(RATE)
-    track.add_audio_bytes(audio(1234, 20), "nana")
+    track.add_audio_bytes(audio(1234, 20), "margot")
     assert all((samples == 1234).all() for samples in await heard(track, 2))
 
 

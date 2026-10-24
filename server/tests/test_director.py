@@ -374,7 +374,7 @@ async def test_a_reaction_that_runs_long_is_not_played(director: Director) -> No
     director._lives[1] = long
     await director.written(long, "A glowing promise in a black hole is crazy, honestly.")
     assert director.transcript.lines == []
-    short = Live(2, Take("nana", "react", None), director._epoch)
+    short = Live(2, Take("margot", "react", None), director._epoch)
     short.confirmed.set()
     director._lives[2] = short
     await director.written(short, "[laughter] Oh, dear.")
@@ -385,6 +385,6 @@ async def test_the_panel_stop_introducing_themselves_once_the_jokes_are_written(
     director, played, show = staged
     show.played(Segment(MEET))  # introducing themselves, the rest of them still to go
     director.show = show
-    director._queue = [Take("dev", MEET, None), Take("nana", MEET, None)]
+    director._queue = [Take("dev", MEET, None), Take("margot", MEET, None)]
     director.dossier_ready(dossier())
     assert director._queue == []  # whoever's on finishes; nobody else starts

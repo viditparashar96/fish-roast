@@ -277,16 +277,18 @@ def test_fish_voices_each_character_in_a_voice_of_its_own() -> None:
 
 def test_past_fish_audios_limit_the_host_gives_way() -> None:
     fish = replace(SETTINGS, fish_api_key="f", tts_provider="fish")
-    voices = fish.voices_by_character(CAST)
-    host = next(c for c in CAST if c.host)
+    assert set(fish.voices_by_character(CAST).values()) == {"fish"}  # the panel is five
+    crowd = (*CAST, replace(CAST[1], id="extra", name="Extra"))  # one more than Fish holds
+    voices = fish.voices_by_character(crowd)
+    host = next(c for c in crowd if c.host)
     assert voices[host.id] == "cartesia"  # the next voice there's a key for
-    assert all(voices[c.id] == "fish" for c in CAST if not c.host)
+    assert all(voices[c.id] == "fish" for c in crowd if not c.host)
     assert isinstance(services.tts(fish, host, voices[host.id]), services.CartesiaTTSService)
     assert fish.cues_for(voices[host.id]) == "cartesia"  # told the cues its own voice acts on
     without_cartesia = replace(fish, cartesia_api_key="")
-    assert without_cartesia.voices_by_character(CAST)[host.id] == "openai"
+    assert without_cartesia.voices_by_character(crowd)[host.id] == "openai"
     six = replace(fish, fish_max_voices=6)
-    assert set(six.voices_by_character(CAST).values()) == {"fish"}
+    assert set(six.voices_by_character(crowd).values()) == {"fish"}
     assert set(SETTINGS.voices_by_character(CAST).values()) == {"cartesia"}
 
 
