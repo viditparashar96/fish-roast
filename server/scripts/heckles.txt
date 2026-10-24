@@ -1,0 +1,11 @@
+# The guest heckling the panel (`converse.py --roast URL --script scripts/heckles.txt`): each line
+# is said once the panel has answered the last. `...` is a silence; `!N text` cuts in N lines in.
+Okay, okay. Chad, our pricing is actually very competitive.
+Margot, what exactly is wrong with the font?
+Hands up if you'd actually use it.
+...
+Dev, it is not just one API call.
+!1 Hang on, hang on, that's not fair.
+Carry on.
+Quiet please, let me think.
+Fine. Thanks, everyone.
