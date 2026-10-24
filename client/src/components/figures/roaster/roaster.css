@@ -1,0 +1,291 @@
+/* The roaster figure: the kit's dark tokens retuned to the app's studio palette, plus the few
+   colours the figure is about (the beans, the six voices, the fire). Scoped to .rr. */
+
+.rr.iso {
+  --anatomy-page: #09090b;
+  --anatomy-card: #111114;
+  --anatomy-text: #9a9aa6;
+  --anatomy-strong: #ededf0;
+  --anatomy-muted: #7e7e8a;
+  --anatomy-paper: #111114;
+  --anatomy-face: #1c1c21;
+  --anatomy-top: #1d1d22;
+  --anatomy-shade-0: #0d0d10;
+  --anatomy-shade-1: #111114;
+  --anatomy-shade-2: #141418;
+  --anatomy-shade-3: #18181c;
+  --anatomy-lit-top: #28282e;
+  --anatomy-lit-shade: #1f1f24;
+  --anatomy-hi: #d6d6dc;
+  --anatomy-mid: #6c6c76;
+  --anatomy-lo: #3f3f47;
+  --anatomy-faint: #2a2a31;
+  --anatomy-lit: #ffffff;
+  --anatomy-halo: #030304;
+  --anatomy-mono: "Geist Mono Variable", ui-monospace, monospace;
+  --rr-ember: #ff6a3d;
+  --rr-bean: rgb(116 70 40);
+  --rr-green: rgb(128 146 86);
+  --rr-heat: 0.7;
+  color: var(--anatomy-text);
+}
+
+.rr .iso-figure {
+  margin: 0;
+}
+
+.rr .iso-plate {
+  border-radius: 14px;
+  box-shadow: 0 0 0 1px var(--line, #1e1e24);
+  padding: 46px 20px;
+  overflow: hidden;
+}
+
+.rr .iso-plate-corners {
+  inset: 16px 18px;
+}
+
+.rr .iso-plate-corner {
+  font-size: 11px;
+}
+
+.rr .iso-legend {
+  margin-top: 14px;
+  color: var(--anatomy-muted);
+}
+
+/* The stage: back art, the fire, front art, the air above it all. */
+.rr-stage {
+  position: relative;
+  border-radius: 10px;
+  cursor: grab;
+  touch-action: pan-y;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.rr-stage[data-dragging] {
+  cursor: grabbing;
+}
+.rr-stage:focus-visible {
+  outline: 1px solid var(--anatomy-muted);
+  outline-offset: 6px;
+}
+.rr-stage > svg,
+.rr-stage > canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.rr-stage > .rr-layer {
+  position: absolute;
+  inset: 0;
+  height: 100% !important;
+  pointer-events: none;
+}
+.rr-stage > canvas {
+  mix-blend-mode: screen;
+}
+.rr-stage[data-gl] .rr-fallback {
+  display: none;
+}
+
+/* Inside the cabinet: soot and shadow, so the fire has a ground. */
+.rr-cavity {
+  --anatomy-paper: #0a0a0c;
+  --anatomy-top: #121215;
+  --anatomy-shade-0: #07070a;
+  --anatomy-shade-1: #09090b;
+  --anatomy-shade-2: #0b0b0e;
+  --anatomy-shade-3: #0e0e11;
+}
+
+.rr-void,
+.rr-bore {
+  fill: #040405;
+  stroke: none;
+}
+.rr-voice-band {
+  fill: var(--c);
+  stroke: none;
+  opacity: 0.85;
+}
+.rr-tab {
+  fill: var(--c);
+  stroke: none;
+  opacity: 0.4;
+  transition: opacity 240ms var(--anatomy-ease);
+}
+.rr-tab[data-on] {
+  opacity: 1;
+  filter: drop-shadow(0 0 2.5px var(--c));
+}
+
+/* Beans: their colour is the roast. */
+.rr-bean,
+.rr-bean-mass,
+.rr-glass-bean {
+  fill: var(--rr-bean);
+  stroke: color-mix(in oklab, var(--rr-bean) 45%, #000);
+  stroke-width: 0.35;
+  vector-effect: non-scaling-stroke;
+}
+.rr-bean-mass {
+  stroke: none;
+}
+.rr-bed {
+  fill: color-mix(in oklab, var(--rr-bean) 42%, #000);
+  stroke: none;
+}
+.rr-green {
+  fill: var(--rr-green);
+  stroke: color-mix(in oklab, var(--rr-green) 45%, #000);
+  stroke-width: 0.35;
+  vector-effect: non-scaling-stroke;
+}
+.rr-green-bed {
+  fill: color-mix(in oklab, var(--rr-green) 38%, #000);
+  stroke: none;
+}
+.rr-cone-inside,
+.rr-tray-wall {
+  fill: #08080a;
+  stroke: none;
+}
+.rr-tray-floor {
+  fill: var(--anatomy-shade-1);
+  stroke: none;
+}
+.rr-trough {
+  fill: #0a0a0c;
+  stroke: none;
+}
+.rr-scoop {
+  fill: #060607;
+  stroke: none;
+}
+
+/* The page going into the hopper, and the Roast Card coming out. */
+.rr-sheet {
+  fill: #24242a;
+  stroke: none;
+}
+.rr-sheet-fold {
+  fill: #303037;
+  stroke: none;
+}
+.rr .rr-card > .iso-top {
+  fill: #2c2c33;
+}
+.rr-cells {
+  fill: color-mix(in oklab, var(--rr-ember) 30%, transparent);
+  stroke: var(--anatomy-mid);
+  stroke-width: 0.4;
+  vector-effect: non-scaling-stroke;
+}
+
+/* The sight glass. */
+.rr-glass-void {
+  fill: #060607;
+  stroke: none;
+}
+.rr-glass-shine {
+  fill: none;
+  stroke: #ffffff;
+  stroke-opacity: 0.22;
+  stroke-width: 0.6;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.rr-vane {
+  fill: none;
+  stroke: var(--anatomy-mid);
+  stroke-width: 0.8;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+/* The dial and the knob. */
+.rr-needle {
+  stroke-width: 1.1;
+}
+.rr-pointer {
+  stroke-width: 1.3;
+}
+.rr-hub {
+  fill: var(--anatomy-hi);
+}
+.rr-crack circle {
+  fill: var(--rr-ember);
+}
+.rr-drop circle {
+  fill: var(--anatomy-mid);
+}
+.rr-marks circle {
+  fill: var(--rr-ember);
+}
+.rr-lamp,
+.rr-led {
+  fill: var(--rr-ember);
+  filter: drop-shadow(0 0 1.6px var(--rr-ember));
+}
+
+/* Without WebGL: a small SVG flame on each jet, scaled with the gas. */
+.rr-flame path {
+  fill: #4f86ff;
+  fill-opacity: 0.55;
+  stroke: #9cc0ff;
+  stroke-opacity: 0.6;
+  stroke-width: 0.5;
+  vector-effect: non-scaling-stroke;
+}
+.rr-flame {
+  transform: scaleY(var(--flame, 0.7));
+}
+
+.rr-live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .rr .iso-plate {
+    padding: 44px 6px 64px;
+  }
+  .rr-stage {
+    /* Scale the drawing up inside the card: its empty headroom and corners fall outside. */
+    margin: -12% -16% -4%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rr * {
+    transition: none !important;
+  }
+}
+
+.rr-louvre {
+  fill: #08080a;
+  stroke: none;
+}
+
+.rr-key {
+  width: 9px;
+  height: 9px;
+  border-radius: 9999px;
+  flex: none;
+}
+.rr .iso-caption {
+  max-width: 78ch;
+}
+.rr-source {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  color: var(--anatomy-text);
+}
+.rr-source:hover {
+  color: var(--anatomy-strong);
+}

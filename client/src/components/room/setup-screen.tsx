@@ -11,6 +11,7 @@ import {
 import { type DragEvent, type FormEvent, useRef, useState } from "react"
 import { flushSync } from "react-dom"
 
+import { HowARoastWorks } from "@/components/figures/roaster"
 import { Logo } from "@/components/room/logo"
 import { Orb } from "@/components/room/orb"
 import { cn } from "@/lib/utils"
@@ -513,6 +514,8 @@ export function SetupScreen({
             )}
           </div>
         </section>
+
+        <HowARoastWorks />
 
         <section
           id="panel"
