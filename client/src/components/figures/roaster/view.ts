@@ -13,7 +13,7 @@ import {
 } from "../../iso/iso-kit.ts"
 
 export const WIDTH = 760
-export const HEIGHT = 560
+export const HEIGHT = 620
 export const AZIMUTH = 52
 export const ELEVATION = 30
 
@@ -102,7 +102,7 @@ export const P = fitProjection(
   ],
   WIDTH,
   HEIGHT,
-  { pad: 30, azimuth: AZIMUTH, elevation: ELEVATION }
+  { pad: 22, azimuth: AZIMUTH, elevation: ELEVATION }
 )
 
 export const at = (point: Point3): Flat => iso(point, P)

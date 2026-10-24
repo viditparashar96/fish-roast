@@ -632,7 +632,8 @@ slab("cabinet.top", TOP, C.z1, V.TOP_Z - C.z1, {
     Dots(
       k.corners(TOP, 6).map(([x, y]) => at([x, y, V.TOP_Z])),
       { size: 0.5 }
-    ),
+    ) +
+    Ln(k.planOutline(k.insetPlan(TOP, 11), V.TOP_Z, P, 4), { tone: "faint" }),
 })
 
 // ---- the burner ------------------------------------------------------------------------------
@@ -950,8 +951,8 @@ discAt("drive.pulley", MOF, PULLEY_Y - 1, PULLEY_Y + 1.4, 4.4, {
   // Outer tangents between the pulley and the drum's toothed ring, in the plane y = PULLEY_Y.
   const c1 = [MOTOR.x, MOTOR.z]
   const c2 = [D.x, D.z]
-  const r1 = 4.4
-  const r2 = 33.4
+  const r1 = 4.4 + 0.8
+  const r2 = 33.4 + 0.8
   const dx = c2[0] - c1[0]
   const dz = c2[1] - c1[1]
   const d = Math.hypot(dx, dz)
@@ -2068,6 +2069,94 @@ const PRY1 = PR.y + PR.d
     tone: "mid",
     owner: id,
   })
+}
+
+// ---- the parts round the machine ------------------------------------------------------------
+
+// The airflow damper on the cabinet's top: a valve box with its lever.
+{
+  const BOX = { x: 16, y: -44, w: 14, d: 10, r: 1 }
+  slab("damper", BOX, V.TOP_Z, 4.6, {
+    tone: "mid",
+    bevel: 0.4,
+    steps: 2,
+    extra: Dots(
+      [
+        [BOX.x + 2, BOX.y + 2],
+        [BOX.x + BOX.w - 2, BOX.y + BOX.d - 2],
+      ].map(([x, y]) => at([x, y, V.TOP_Z + 4.6])),
+      { size: 0.42 }
+    ),
+  })
+  const pivot = [BOX.x + BOX.w, BOX.y + BOX.d / 2, V.TOP_Z + 2.6]
+  discAt(
+    "damper.rod",
+    G.frameAlong(pivot, [1, 0, 0]),
+    0,
+    9 - Math.sqrt(2.4 ** 2 - 1.1 ** 2),
+    1.1,
+    { tone: "hi" }
+  )
+  ballAt("damper.knob", G.add3(pivot, [9, 0, 0]), 2.4, { tone: "hi" })
+}
+
+// The cabinet is held down to the bench by two brackets at its front corners.
+for (const bx of [C.x0 + 8, C.x1 - 8]) {
+  const plate = { x: bx - 4.5, y: PLINTH.y + PLINTH.d, w: 9, d: 6, r: 0.8 }
+  slab("stand.bracket", plate, 0, 1.6, {
+    tone: "mid",
+    bevel: 0.3,
+    steps: 2,
+    extra:
+      Ln(k.ring(bx, plate.y + 3.4, 1.6, 1.6, P, 14), { tone: "lo" }) +
+      Dots([at([bx, plate.y + 3.4, 1.6])], { size: 0.5 }),
+  })
+}
+
+// A sample dish beside the printer: a roaster checks the colour of each batch against it.
+{
+  const DISH = { x: 134, y: 110, r: 10.5, h: 3.2 }
+  const dishF = G.frameOf([DISH.x, DISH.y, 0], [0, 0, 1], [1, 0, 0], [0, 1, 0])
+  const rim = G.circleOf(dishF, DISH.h, DISH.r - 1.4, P, 64)
+  const bed = G.circleOf(dishF, DISH.h - 0.9, DISH.r - 2.6, P, 48)
+  seed = 41
+  const beans = []
+  for (let i = 0; i < 40 && beans.length < 16; i++) {
+    const a = rnd() * Math.PI * 2
+    const r = Math.sqrt(rnd()) * (DISH.r - 4)
+    beans.push({
+      x: DISH.x + r * Math.cos(a),
+      y: DISH.y + r * Math.sin(a),
+      deg: rnd() * 180,
+    })
+  }
+  beans.sort(
+    (a, b) => k.depthOf([a.x, a.y, 0], P) - k.depthOf([b.x, b.y, 0], P)
+  )
+  const id = nameFor("stand.dish")
+  const clip = "rr-dish-clip"
+  put(
+    id,
+    [DISH.x, DISH.y, DISH.h / 2],
+    `<path class="iso-halo rr-soft" d="${k.haloOf({ x: DISH.x - DISH.r, y: DISH.y - DISH.r, w: 2 * DISH.r, d: 2 * DISH.r, r: DISH.r }, 0, 0.5, P)}"/>` +
+      S(k.cylinder(DISH.x, DISH.y, DISH.r, 0, DISH.h, P, 48, 0.4), {
+        tone: "mid",
+      }) +
+      `<clipPath id="${clip}"><path d="${rim}"/></clipPath><g clip-path="url(#${clip})">` +
+      `<path class="rr-tray-wall" d="${rim}"/>` +
+      `<path class="rr-bed" d="${bed}"/>` +
+      `<path class="rr-bean" d="${beans.map((b) => flatBean(b.x, b.y, DISH.h - 0.6, b.deg, 2.2, 1.5)).join("")}"/>` +
+      `</g>` +
+      Ln(rim, { tone: "lo" }),
+    [
+      record(
+        A.cylinder(DISH.x, DISH.y, DISH.r, 0, DISH.h, {
+          name: id,
+          owner: "stand.bench",
+        })
+      ),
+    ]
+  )
 }
 
 // ---- the fire: the canvas goes here in the order --------------------------------------------

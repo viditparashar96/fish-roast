@@ -8,7 +8,7 @@ function Placeholder() {
   return (
     <div
       className="w-full rounded-[14px] border border-line bg-surface"
-      style={{ aspectRatio: "760 / 640" }}
+      style={{ aspectRatio: "760 / 700" }}
       aria-hidden="true"
     />
   )
@@ -47,7 +47,8 @@ export function HowARoastWorks() {
           How a roast works
         </h2>
         <span className="text-[13px] text-subtle">
-          Turn the heat. Everything on it is a number the show really uses.
+          Turn the heat. The counts are the show's own; the temperatures are
+          real roasting.
         </span>
       </div>
       {near ? (

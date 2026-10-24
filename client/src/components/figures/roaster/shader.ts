@@ -111,7 +111,7 @@ void main(){
     for(int i=0;i<3;i++){
       float a=float(i)*2.1+.4;
       vec3 b=vec3(uTray.x+cos(a)*uTray.w*.45,uTray.y+sin(a)*uTray.w*.45,uTray.z);
-      col+=vec3(.8,.82,.86)*column(vb,b,3.5,.16,34.,vec2(.05,-.04),7.,float(i)*4.3)*uSteam*.22;
+      col+=vec3(.8,.82,.86)*column(vb,b,3.5,.16,34.,vec2(.05,-.04),7.,float(i)*4.3)*uSteam*.42;
     }
   }
   col=tonemap(col,1.2);
